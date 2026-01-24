@@ -55,9 +55,9 @@ compose.desktop {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe)
             packageName = "LovelyBible"
             packageVersion = "1.0.1"
-            description = "성경 프레젠테이션 앱"
-            copyright = "© 2026 LovelyBible"
-            vendor = "LovelyBible Team"
+            description = "Bible Presentation App"
+            copyright = "Copyright 2026 LovelyBible"
+            vendor = "LovelyBibleTeam"
             
             windows {
                 menuGroup = "LovelyBible"
