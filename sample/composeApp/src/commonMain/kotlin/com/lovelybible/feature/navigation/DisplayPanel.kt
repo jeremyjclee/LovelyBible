@@ -1,5 +1,6 @@
 package com.lovelybible.feature.navigation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -20,13 +21,17 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lovelybible.domain.model.Verse
 import com.lovelybible.theme.AppColors
 import com.lovelybible.ui.components.GlassCard
+import com.lovelybible.util.rememberBackgroundImage
 
 /**
  * 디스플레이 패널 - 성경 구절 표시 및 내비게이션
@@ -70,14 +75,26 @@ fun DisplayPanel(
                 }
             }
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // 제목
-            Text(
-                text = state.currentTitle.ifEmpty { "구절을 검색해주세요" },
-                style = MaterialTheme.typography.headlineMedium,
-                color = AppColors.Accent
+        Box(modifier = Modifier.fillMaxSize()) {
+            // 배경 이미지
+            val backgroundImage = rememberBackgroundImage()
+            if (backgroundImage != null) {
+                Image(
+                    bitmap = backgroundImage,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp)
+            ) {
+                // 제목
+                Text(
+                    text = state.currentTitle.ifEmpty { "구절을 검색해주세요" },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color(0xFF2E7D32)  // 진한 초록색
             )
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -178,6 +195,7 @@ fun DisplayPanel(
                     enabled = state.canNavigateNext,
                     onClick = { onIntent(NavigationIntent.NavigateNext) }
                 )
+            }
             }
         }
     }
@@ -286,7 +304,7 @@ fun VerseRow(
             Text(
                 text = "${verse.verse}",
                 style = MaterialTheme.typography.bodyLarge,
-                color = AppColors.Accent,
+                color = Color(0xFF2E7D32),  // 진한 초록색
                 modifier = Modifier.width(40.dp),
                 textAlign = TextAlign.End
             )
@@ -295,7 +313,7 @@ fun VerseRow(
         Text(
             text = verse.text,
             style = MaterialTheme.typography.bodyLarge,
-            color = AppColors.TextPrimary
+            color = Color.Black  // 검정색
         )
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -89,7 +90,8 @@ fun SearchPanel(
             Text(
                 text = "검색",
                 style = MaterialTheme.typography.titleSmall,
-                color = AppColors.Accent
+                color = AppColors.Accent,
+                fontWeight = FontWeight.Bold
             )
             
             // 책/장/절 입력 - 한 줄로 배치

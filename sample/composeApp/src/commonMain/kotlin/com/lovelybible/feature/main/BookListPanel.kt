@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lovelybible.domain.model.BibleBookNames
 import com.lovelybible.domain.model.Book
@@ -136,14 +137,14 @@ private fun TestamentToggle(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         ToggleButton(
-            text = "구약 (39권)",
+            text = "구약",
             isSelected = selectedTestament == Testament.OLD,
             onClick = { onTestamentSelected(Testament.OLD) },
             modifier = Modifier.weight(1f)
         )
         
         ToggleButton(
-            text = "신약 (27권)",
+            text = "신약",
             isSelected = selectedTestament == Testament.NEW,
             onClick = { onTestamentSelected(Testament.NEW) },
             modifier = Modifier.weight(1f)
@@ -174,7 +175,8 @@ private fun ToggleButton(
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium,
-            color = if (isSelected) AppColors.Background else AppColors.TextSecondary
+            color = if (isSelected) AppColors.Background else AppColors.TextSecondary,
+            fontWeight = FontWeight.Bold
         )
     }
 }

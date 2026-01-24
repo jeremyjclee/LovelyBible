@@ -99,7 +99,11 @@ class NavigationViewModel(
                 // 하드코딩 제거 - 모든 책에서 state.pageSize 사용
                 val displayedVerses = allVerses.drop(startIndex).take(state.pageSize)
                 val fullBookName = BibleBookNames.toFullName(position.book)
-                val title = "$fullBookName ${position.chapter}장"
+                val title = if (position.book == "사신" || fullBookName == "사도신경") {
+                    fullBookName
+                } else {
+                    "$fullBookName ${position.chapter}장"
+                }
                 
                 // 이전/다음 가능 여부 계산 (장/책 경계 고려)
                 val canPrevious = canNavigatePrevious(position, startIndex)
