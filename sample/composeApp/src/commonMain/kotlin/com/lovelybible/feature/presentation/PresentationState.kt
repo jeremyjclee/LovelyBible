@@ -22,5 +22,10 @@ data class PresentationState(
     val displayInfo: DisplayInfo? = null,
     val currentVerses: List<Verse> = emptyList(),
     val currentTitle: String = "",
+<<<<<<< HEAD
     val mode: PresentationMode = PresentationMode.NONE
+=======
+    val mode: PresentationMode = PresentationMode.NONE,
+    val fontSizeLevel: Int = 4  // 1~10단계, 기본값 4 (50.sp)
+>>>>>>> d50ca95 (feat: font size control and main screen UI improvements)
 )

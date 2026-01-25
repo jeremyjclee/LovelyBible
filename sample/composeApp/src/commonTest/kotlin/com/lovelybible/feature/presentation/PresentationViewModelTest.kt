@@ -248,4 +248,67 @@ class PresentationViewModelTest {
         assertEquals(2560, displayInfo.bounds.width, "외부 모니터 너비")
         assertEquals(1440, displayInfo.bounds.height, "외부 모니터 높이")
     }
+<<<<<<< HEAD
+=======
+    
+    /**
+     * 초기 폰트 크기 레벨 테스트 (기본값 4)
+     */
+    @Test
+    fun testInitialFontSizeLevel() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 초기 폰트 크기 레벨은 4
+        assertEquals(4, viewModel.state.fontSizeLevel, "초기 폰트 크기 레벨은 4")
+    }
+    
+    /**
+     * 폰트 크기 레벨 설정 테스트
+     */
+    @Test
+    fun testSetFontSizeLevel() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 레벨 1 설정
+        viewModel.onIntent(PresentationIntent.SetFontSizeLevel(1))
+        assertEquals(1, viewModel.state.fontSizeLevel, "레벨 1로 변경되어야 함")
+        
+        // 레벨 10 설정
+        viewModel.onIntent(PresentationIntent.SetFontSizeLevel(10))
+        assertEquals(10, viewModel.state.fontSizeLevel, "레벨 10으로 변경되어야 함")
+        
+        // 레벨 5 설정
+        viewModel.onIntent(PresentationIntent.SetFontSizeLevel(5))
+        assertEquals(5, viewModel.state.fontSizeLevel, "레벨 5로 변경되어야 함")
+    }
+    
+    /**
+     * 폰트 크기 레벨 범위 외 값 무시 테스트
+     */
+    @Test
+    fun testSetFontSizeLevel_outOfRange() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 초기값 확인
+        assertEquals(4, viewModel.state.fontSizeLevel)
+        
+        // 범위 외 값 (0) - 무시되어야 함
+        viewModel.onIntent(PresentationIntent.SetFontSizeLevel(0))
+        assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 0은 무시되어야 함")
+        
+        // 범위 외 값 (11) - 무시되어야 함
+        viewModel.onIntent(PresentationIntent.SetFontSizeLevel(11))
+        assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 11은 무시되어야 함")
+        
+        // 범위 외 값 (-1) - 무시되어야 함
+        viewModel.onIntent(PresentationIntent.SetFontSizeLevel(-1))
+        assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 -1은 무시되어야 함")
+    }
+>>>>>>> d50ca95 (feat: font size control and main screen UI improvements)
 }
