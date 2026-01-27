@@ -197,7 +197,7 @@ MVI 패턴 기반 검색 기능을 구현한다. 책/장/절 입력, 자동완�
   // 책 필드에서 Enter/Tab → 장 필드로 포커스
   BookSearchField(
       onEnter = {
-          onIntent(SearchIntent.SelectBook(state.suggestions.firstOrNull() ?: return@))
+          onIntent(SearchIntent.SelectBook(state.suggestions.firstOrNull() ?: return@BookSearchField))
           chapterFocus.requestFocus()
       },
       modifier = Modifier.focusRequester(bookFocus)

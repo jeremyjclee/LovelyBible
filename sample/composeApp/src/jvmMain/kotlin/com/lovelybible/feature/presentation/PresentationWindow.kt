@@ -66,7 +66,8 @@ fun PresentationWindow(
         LovelyBibleTheme {
             PresentationContent(
                 verses = state.currentVerses,
-                title = state.currentTitle
+                title = state.currentTitle,
+                fontSizeLevel = state.fontSizeLevel
             )
         }
     }

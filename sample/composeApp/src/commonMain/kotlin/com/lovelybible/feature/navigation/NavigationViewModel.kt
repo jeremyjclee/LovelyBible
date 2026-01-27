@@ -64,11 +64,17 @@ class NavigationViewModel(
     private fun navigateToPosition(position: BiblePosition) {
         scope.launch {
             try {
-                state = state.copy(isLoading = true, error = null)
-                
-                // 책 종류에 따라 pageSize 자동 설정
-                val defaultPageSize = if (position.book == "사신") 5 else 1
-                state = state.copy(pageSize = defaultPageSize)
+                // 책 변경 시 페이지 크기 기본값 설정 (사도신경: 5, 그 외: 1)
+                if (position.book != state.currentPosition?.book) {
+                    val defaultPageSize = if (position.book == "사신" || position.book == "사도신경") 5 else 1
+                    state = state.copy(
+                        pageSize = defaultPageSize,
+                        isLoading = true,
+                        error = null
+                    )
+                } else {
+                    state = state.copy(isLoading = true, error = null)
+                }
                 
                 // 책 목록이 비어있으면 다시 로드
                 if (allBooks.isEmpty()) {

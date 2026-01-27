@@ -8,21 +8,34 @@ import com.lovelybible.domain.model.Testament
 import com.lovelybible.domain.model.Verse
 import com.lovelybible.domain.repository.BibleRepository
 import com.lovelybible.feature.navigation.NavigationViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Phase 5 - PresentationViewModel 테스트
- * - 프레젠테이션 토글 동작
- * - 모니터 감지 통합
- * - NavigationViewModel 상태 동기화
- */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PresentationViewModelTest {
     
+    @BeforeTest
+    fun setup() {
+        Dispatchers.setMain(StandardTestDispatcher())
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     /**
      * 단일 모니터 Fake 구현
      */
@@ -207,11 +220,15 @@ class PresentationViewModelTest {
     /**
      * Navigation 상태 업데이트 테스트
      */
+    /**
+     * Navigation 상태 업데이트 테스트
+     */
     @Test
-    fun testUpdateFromNavigation() {
+    fun testUpdateFromNavigation() = runTest {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
         val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        advanceUntilIdle() // Let NavigationViewModel init finish
         
         val testVerses = listOf(
             Verse("창", 1, 1, "태초에 하나님이 천지를 창조하시니라")
@@ -248,8 +265,6 @@ class PresentationViewModelTest {
         assertEquals(2560, displayInfo.bounds.width, "외부 모니터 너비")
         assertEquals(1440, displayInfo.bounds.height, "외부 모니터 높이")
     }
-<<<<<<< HEAD
-=======
     
     /**
      * 초기 폰트 크기 레벨 테스트 (기본값 4)
@@ -310,5 +325,4 @@ class PresentationViewModelTest {
         viewModel.onIntent(PresentationIntent.SetFontSizeLevel(-1))
         assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 -1은 무시되어야 함")
     }
->>>>>>> d50ca95 (feat: font size control and main screen UI improvements)
 }

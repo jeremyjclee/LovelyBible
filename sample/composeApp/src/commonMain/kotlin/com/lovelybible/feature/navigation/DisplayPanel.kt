@@ -21,20 +21,22 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lovelybible.domain.model.Verse
+import com.lovelybible.feature.presentation.PresentationContent
+import com.lovelybible.feature.presentation.PresentationIntent
 import com.lovelybible.theme.AppColors
+import com.lovelybible.ui.components.FontSizeControl
 import com.lovelybible.ui.components.GlassCard
 import com.lovelybible.util.rememberBackgroundImage
 
 /**
  * 디스플레이 패널 - 성경 구절 표시 및 내비게이션
+ * Preview Area (PPT 미리보기) + Control Area (조작부)
  */
 @Composable
 fun DisplayPanel(
@@ -75,127 +77,122 @@ fun DisplayPanel(
                 }
             }
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // 배경 이미지
-            val backgroundImage = rememberBackgroundImage()
-            if (backgroundImage != null) {
-                Image(
-                    bitmap = backgroundImage,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
+        Column(modifier = Modifier.fillMaxSize()) {
             
-            Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp)
+            // 1. Preview Area (상단, 가변 높이)
+            // PPT 화면과 동일한 비율/구성을 보여줌
+            // 1. Preview Area (상단, 가변 높이)
+            // PPT 화면과 동일한 비율/구성을 보여줌
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                // 제목
-                Text(
-                    text = state.currentTitle.ifEmpty { "구절을 검색해주세요" },
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color(0xFF2E7D32)  // 진한 초록색
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // 구절 표시 영역
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .aspectRatio(16f / 9f)
+                        .fillMaxWidth() // 가로 꽉 채우기 시도 (aspectRatio로 높이 결정됨)
+                        .clip(RoundedCornerShape(12.dp))
+                        .shadow(4.dp, RoundedCornerShape(12.dp))
+                        .background(Color.White) // PPT 기본 배경색
                 ) {
-                    CircularProgressIndicator(color = AppColors.Accent)
-                }
-            } else if (state.error != null) {
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = state.error,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = AppColors.Error
-                    )
-                }
-            } else if (state.displayedVerses.isEmpty()) {
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "검색 결과가 없습니다",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = AppColors.TextSecondary
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    state.displayedVerses.forEach { verse ->
-                        val isCreed = verse.bookName == "사신"
-                        VerseRow(verse = verse, hideVerseNumber = isCreed)
+                    // 스케일 계산: 기준 너비 1920dp 대비 현재 너비 비율
+                    // aspectRatio(16/9)가 적용되었으므로, maxWidth는 1920 비율에 맞게 조정됨
+                    val targetWidth = 1920f
+                    val scale = (maxWidth.value / targetWidth).coerceAtLeast(0.2f)
+                    
+                    if (state.isLoading) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = AppColors.Accent)
+                        }
+                    } else if (state.error != null) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(state.error, color = AppColors.Error)
+                        }
+                    } else {
+                        // PPT 콘텐츠 재사용
+                        PresentationContent(
+                            verses = state.displayedVerses,
+                            title = state.currentTitle,
+                            fontSizeLevel = presentationViewModel.state.fontSizeLevel,
+                            scaleFactor = scale,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 페이지 크기 선택
-            PageSizeSelector(
-                currentSize = state.pageSize,
-                onSizeChange = { onIntent(NavigationIntent.UpdatePageSize(it)) }
-            )
+            HorizontalDivider(color = AppColors.BorderColor)
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 내비게이션 버튼 영역
-            Row(
+            // 2. Control Area (하단, 조작부)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 이전 버튼
-                NavigationArrowButton(
-                    direction = ArrowDirection.LEFT,
-                    enabled = state.canNavigatePrevious,
-                    onClick = { onIntent(NavigationIntent.NavigatePrevious) }
+                // 글자 크기 조절 (게이지)
+                FontSizeControl(
+                    currentLevel = presentationViewModel.state.fontSizeLevel,
+                    onLevelChange = { level ->
+                        presentationViewModel.onIntent(PresentationIntent.SetFontSizeLevel(level))
+                    }
                 )
                 
-                // PPT 모드 버튼
-                Button(
-                    onClick = { 
-                        presentationViewModel.onIntent(
-                            com.lovelybible.feature.presentation.PresentationIntent.TogglePresentation
-                        )
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (presentationViewModel.state.isPresentationWindowOpen) 
-                            AppColors.Success else AppColors.Accent
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(48.dp)
+                // 절 개수 선택
+                PageSizeSelector(
+                    currentSize = state.pageSize,
+                    onSizeChange = { onIntent(NavigationIntent.UpdatePageSize(it)) }
+                )
+                
+                // 내비게이션 버튼 (이전 - PPT - 다음)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PresentToAll,
-                        contentDescription = null
+                    // 이전 버튼
+                    NavigationArrowButton(
+                        direction = ArrowDirection.LEFT,
+                        enabled = state.canNavigatePrevious,
+                        onClick = { onIntent(NavigationIntent.NavigatePrevious) }
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        if (presentationViewModel.state.isPresentationWindowOpen) 
-                            "PPT 종료" else "PPT 모드"
+                    
+                    // PPT 모드 버튼
+                    Button(
+                        onClick = { 
+                            presentationViewModel.onIntent(
+                                PresentationIntent.TogglePresentation
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (presentationViewModel.state.isPresentationWindowOpen) 
+                                AppColors.Success else AppColors.Accent
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PresentToAll,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (presentationViewModel.state.isPresentationWindowOpen) 
+                                "PPT 종료" else "PPT 모드"
+                        )
+                    }
+                    
+                    // 다음 버튼
+                    NavigationArrowButton(
+                        direction = ArrowDirection.RIGHT,
+                        enabled = state.canNavigateNext,
+                        onClick = { onIntent(NavigationIntent.NavigateNext) }
                     )
                 }
-                
-                // 다음 버튼
-                NavigationArrowButton(
-                    direction = ArrowDirection.RIGHT,
-                    enabled = state.canNavigateNext,
-                    onClick = { onIntent(NavigationIntent.NavigateNext) }
-                )
-            }
             }
         }
     }
@@ -289,36 +286,6 @@ fun NavigationArrowButton(
 }
 
 /**
- * 구절 행 컴포넌트
- */
-@Composable
-fun VerseRow(
-    verse: Verse,
-    hideVerseNumber: Boolean = false,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        if (!hideVerseNumber) {
-            Text(
-                text = "${verse.verse}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF2E7D32),  // 진한 초록색
-                modifier = Modifier.width(40.dp),
-                textAlign = TextAlign.End
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-        }
-        Text(
-            text = verse.text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Black  // 검정색
-        )
-    }
-}
-
-/**
  * 페이지 크기 선택기
  */
 @Composable
@@ -338,15 +305,31 @@ fun PageSizeSelector(
             color = AppColors.TextSecondary
         )
         
-        (1..10).forEach { size ->
-            Text(
-                text = "$size",
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (size == currentSize) AppColors.Accent else AppColors.TextSecondary,
-                modifier = Modifier
-                    .clickable { onSizeChange(size) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+        // 1..10 버튼
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            (1..10).forEach { size ->
+                val isSelected = size == currentSize
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(
+                            if (isSelected) AppColors.Accent else Color.Transparent
+                        )
+                        .clickable { onSizeChange(size) }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "$size",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isSelected) Color.White else AppColors.TextSecondary,
+                        fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else null
+                    )
+                }
+            }
         }
     }
 }
+

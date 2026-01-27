@@ -130,7 +130,7 @@ class SearchViewModelTest {
         
         // 상태 확인
         assertEquals(book, viewModel.state.selectedBook, "선택된 책이 설정되어야 함")
-        assertEquals(book.name, viewModel.state.bookQuery, "bookQuery가 책 이름으로 설정되어야 함")
+        assertEquals("창세기", viewModel.state.bookQuery, "bookQuery가 책 이름으로 설정되어야 함")
         assertTrue(viewModel.state.suggestions.isEmpty(), "suggestions가 비워져야 함")
     }
     

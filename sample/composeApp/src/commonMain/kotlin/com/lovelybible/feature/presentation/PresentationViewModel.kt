@@ -50,10 +50,7 @@ class PresentationViewModel(
             PresentationIntent.TogglePresentation -> togglePresentation()
             PresentationIntent.ClosePresentation -> closePresentation()
             PresentationIntent.RefreshMonitors -> refreshMonitors()
-<<<<<<< HEAD
-=======
             is PresentationIntent.SetFontSizeLevel -> setFontSizeLevel(intent.level)
->>>>>>> d50ca95 (feat: font size control and main screen UI improvements)
             
             // 내비게이션 위임
             PresentationIntent.NavigateNext -> navigationViewModel.onIntent(com.lovelybible.feature.navigation.NavigationIntent.NavigateNext)
@@ -62,8 +59,6 @@ class PresentationViewModel(
     }
     
     /**
-<<<<<<< HEAD
-=======
      * 폰트 크기 레벨 설정 (1~10)
      */
     fun setFontSizeLevel(level: Int) {
@@ -73,7 +68,6 @@ class PresentationViewModel(
     }
     
     /**
->>>>>>> d50ca95 (feat: font size control and main screen UI improvements)
      * NavigationViewModel 상태 업데이트 시 호출
      */
     fun updateFromNavigation(verses: List<com.lovelybible.domain.model.Verse>, title: String) {
