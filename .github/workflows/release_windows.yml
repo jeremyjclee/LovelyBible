@@ -22,13 +22,10 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      
     - name: Build Windows Installer (Exe & Msi)
       # 두 포맷 모두 생성 (build.gradle.kts에 설정된 대로)
       # --info: 상세 로그 출력, --stacktrace: 스택 트레이스 출력
-      run: .\gradlew.bat packageDistributionForCurrentOS --info --stacktrace
+      run: cmd /c gradlew.bat packageDistributionForCurrentOS --info --stacktrace
       
     - name: Upload Release Assets
       uses: softprops/action-gh-release@v1
