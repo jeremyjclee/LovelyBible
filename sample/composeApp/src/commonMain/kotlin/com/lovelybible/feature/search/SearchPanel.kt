@@ -36,10 +36,10 @@ fun SearchPanel(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
     effectFlow: kotlinx.coroutines.flow.Flow<SearchEffect>,
+    bookFocusRequester: FocusRequester,
     modifier: Modifier = Modifier
 ) {
     // FocusRequester 정의
-    val bookFocusRequester = remember { FocusRequester() }
     val chapterFocusRequester = remember { FocusRequester() }
     val verseFocusRequester = remember { FocusRequester() }
     

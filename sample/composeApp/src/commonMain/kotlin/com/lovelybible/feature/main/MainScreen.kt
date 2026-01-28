@@ -30,6 +30,9 @@ fun MainScreen() {
     val navigationViewModel: NavigationViewModel = koinInject()
     val presentationViewModel: PresentationViewModel = koinInject()
     
+    // 책 검색 필드 포커스 관리 (검색 단축키용)
+    val bookFocusRequester = remember { FocusRequester() }
+
     // DisplayPanel 포커스 관리
     val displayFocusRequester = remember { FocusRequester() }
     
@@ -59,7 +62,14 @@ fun MainScreen() {
             .focusable()
             .onPreviewKeyEvent { event ->
                 // 스페이스바 또는 F5로 PPT 모드 토글
+                // 스페이스바 또는 F5로 PPT 모드 토글, Ctrl+F로 검색
                 if (event.type == KeyEventType.KeyDown) {
+                    // Ctrl + F: 책 검색 필드로 포커스 이동
+                    if (event.isCtrlPressed && event.key == Key.F) {
+                        bookFocusRequester.requestFocus()
+                        return@onPreviewKeyEvent true
+                    }
+                    
                     when (event.key) {
                         Key.Spacebar, Key.F5 -> {
                             presentationViewModel.togglePresentation()
@@ -76,6 +86,7 @@ fun MainScreen() {
         // 왼쪽: 선택/검색 패널 (40%)
         SelectionPanel(
             searchViewModel = searchViewModel,
+            bookFocusRequester = bookFocusRequester,
             modifier = Modifier
                 .weight(0.4f)
                 .fillMaxHeight()
@@ -100,6 +111,7 @@ fun MainScreen() {
 @Composable
 fun SelectionPanel(
     searchViewModel: SearchViewModel,
+    bookFocusRequester: FocusRequester,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -119,6 +131,7 @@ fun SelectionPanel(
             state = searchViewModel.state,
             onIntent = searchViewModel::onIntent,
             effectFlow = searchViewModel.effect,
+            bookFocusRequester = bookFocusRequester,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.45f)
