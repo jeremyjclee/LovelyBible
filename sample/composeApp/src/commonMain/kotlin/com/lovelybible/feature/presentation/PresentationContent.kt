@@ -22,12 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.lovelybible.domain.model.Verse
 import com.lovelybible.theme.AppColors
 
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import com.lovelybible.util.rememberBackgroundImage
 
@@ -39,17 +33,17 @@ private val DarkGreen = Color(0xFF2E7D32)
  */
 private fun getFontSizeForLevel(level: Int): Int {
     return when (level) {
-        1 -> 38
-        2 -> 42
-        3 -> 46
-        4 -> 50
-        5 -> 54
-        6 -> 58
-        7 -> 62
-        8 -> 66
-        9 -> 70
-        10 -> 74
-        else -> 50 // 기본값
+        1 -> 36
+        2 -> 40
+        3 -> 44
+        4 -> 48
+        5 -> 52
+        6 -> 56
+        7 -> 60
+        8 -> 64
+        9 -> 68
+        10 -> 72
+        else -> 48 // 기본값
     }
 }
 
@@ -86,25 +80,10 @@ fun PresentationContent(
             )
         }
         
-        // 1. 고정된 최대 너비 기준 설정
-        val referenceText = "이것들을 증언하신 이가 이르시되 내가 진실로 속히 오리라 하시거늘 아멘"
-        val textMeasurer = rememberTextMeasurer()
-        val density = LocalDensity.current
-        
-        // MaterialTheme는 @Composable이므로 remember 블록 밖에서 호출
-        val baseTypography = MaterialTheme.typography.headlineLarge
-        
-        // 2. 기준 폰트 크기(50sp, 레벨 4)로 최대 너비를 고정 계산
-        // scaleFactor 적용하여 작은 화면에서는 너비도 축소
-        val fixedMaxWidth = remember(referenceText, density, baseTypography, scaleFactor) {
-            val baseFontSize = (50 * scaleFactor).toInt() // 기준 폰트 크기에 스케일 적용
-            val baseTextStyle = baseTypography.copy(fontSize = baseFontSize.sp)
-            val result = textMeasurer.measure(
-                text = referenceText.keepAll(),
-                style = baseTextStyle
-            )
-            with(density) { result.size.width.toDp() }
-        }
+        // 고정된 최대 너비 설정 (1300dp 기준, scaleFactor 적용)
+        // 폰트 크기와 관계없이 일정한 화면 비율 유지
+        // 큰 폰트 → 적은 글자/줄, 작은 폰트 → 많은 글자/줄
+        val fixedMaxWidth = (1300 * scaleFactor).dp
         
         /* 
          * 변경 내역:
