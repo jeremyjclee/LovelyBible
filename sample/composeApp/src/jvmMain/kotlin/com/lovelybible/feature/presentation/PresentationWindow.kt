@@ -53,12 +53,13 @@ fun PresentationWindow(
     )
     
     Window(
-        onCloseRequest = onClose,
+        onCloseRequest = { /* OS 레벨 닫힘 차단: 앱 클릭으로 PPT가 꺼지지 않도록 방지 */ },
         state = windowState,
         title = "Lovely Bible - Presentation",
         icon = icon,
         undecorated = true,  // 프레임 없음
         alwaysOnTop = true,
+        focusable = true,
         onKeyEvent = { event ->
             handleKeyEvent(event, onClose, onAction)
         }
@@ -84,15 +85,17 @@ private fun handleKeyEvent(
     if (event.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return false
     
     return when (event.key) {
+        // Esc: PPT 종료
         Key.Escape -> {
             onClose()
             true
         }
+        // 방향키: 네비게이션
         Key.DirectionLeft, Key.DirectionUp -> {
             onAction(PresentationIntent.NavigatePrevious)
             true
         }
-        Key.DirectionRight, Key.DirectionDown, Key.Spacebar -> {
+        Key.DirectionRight, Key.DirectionDown -> {
             onAction(PresentationIntent.NavigateNext)
             true
         }

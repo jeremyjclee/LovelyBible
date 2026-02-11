@@ -29,6 +29,7 @@ fun MainScreen() {
     val searchViewModel: SearchViewModel = koinInject()
     val navigationViewModel: NavigationViewModel = koinInject()
     val presentationViewModel: PresentationViewModel = koinInject()
+    val settingsViewModel: com.lovelybible.feature.settings.SettingsViewModel = koinInject()
     
     // 책 검색 필드 포커스 관리 (검색 단축키용)
     val bookFocusRequester = remember { FocusRequester() }
@@ -61,8 +62,6 @@ fun MainScreen() {
             .focusRequester(rootFocusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
-                // 스페이스바 또는 F5로 PPT 모드 토글
-                // 스페이스바 또는 F5로 PPT 모드 토글, Ctrl+F로 검색
                 if (event.type == KeyEventType.KeyDown) {
                     // Ctrl + F: 책 검색 필드로 포커스 이동
                     if (event.isCtrlPressed && event.key == Key.F) {
@@ -71,9 +70,25 @@ fun MainScreen() {
                     }
                     
                     when (event.key) {
+                        // F5 / Spacebar: PPT 모드 ON만 (이미 ON이면 무시)
                         Key.Spacebar, Key.F5 -> {
-                            presentationViewModel.togglePresentation()
+                            if (!presentationViewModel.state.isPresentationWindowOpen) {
+                                presentationViewModel.onIntent(
+                                    com.lovelybible.feature.presentation.PresentationIntent.OpenPresentation
+                                )
+                            }
                             true
+                        }
+                        // Esc: PPT 모드 OFF만 (이미 OFF이면 무시)
+                        Key.Escape -> {
+                            if (presentationViewModel.state.isPresentationWindowOpen) {
+                                presentationViewModel.onIntent(
+                                    com.lovelybible.feature.presentation.PresentationIntent.ClosePresentation
+                                )
+                                true
+                            } else {
+                                false
+                            }
                         }
                         else -> false
                     }
@@ -97,6 +112,7 @@ fun MainScreen() {
             state = navigationViewModel.state,
             onIntent = navigationViewModel::onIntent,
             presentationViewModel = presentationViewModel,
+            settingsViewModel = settingsViewModel,
             focusRequester = displayFocusRequester,
             modifier = Modifier
                 .weight(0.6f)

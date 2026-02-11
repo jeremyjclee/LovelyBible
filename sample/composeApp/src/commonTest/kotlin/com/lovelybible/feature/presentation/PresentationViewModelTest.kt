@@ -325,4 +325,280 @@ class PresentationViewModelTest {
         viewModel.onIntent(PresentationIntent.SetFontSizeLevel(-1))
         assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 -1은 무시되어야 함")
     }
+    
+    // ============================================================
+    // Phase 1: PPT 모드 보호 테스트
+    // ============================================================
+    
+    /**
+     * ClosePresentation intent만이 PPT를 닫을 수 있음
+     */
+    @Test
+    fun testOnlyExplicitCloseCanClosePPT() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // PPT 열기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "PPT가 열려야 함")
+        assertTrue(viewModel.state.isActive, "활성화 되어야 함")
+        
+        // 명시적 ClosePresentation으로만 닫힘
+        viewModel.onIntent(PresentationIntent.ClosePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen, "ClosePresentation으로 닫혀야 함")
+        assertFalse(viewModel.state.isActive, "비활성화 되어야 함")
+        assertEquals(PresentationMode.NONE, viewModel.state.mode, "모드가 NONE이어야 함")
+    }
+    
+    /**
+     * TogglePresentation으로 열고 ClosePresentation으로 닫기 — 상태 정확성
+     */
+    @Test
+    fun testClosePresentation_afterToggle_stateIsCorrect() {
+        val monitorManager = FakeDualMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // Toggle로 열기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        assertEquals(PresentationMode.EXTERNAL, viewModel.state.mode)
+        
+        // Close로 닫기
+        viewModel.onIntent(PresentationIntent.ClosePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen, "닫혀야 함")
+        assertFalse(viewModel.state.isActive, "비활성화 되어야 함")
+        assertEquals(PresentationMode.NONE, viewModel.state.mode, "NONE이어야 함")
+    }
+    
+    /**
+     * 연속 토글 사이클에서 상태 일관성 유지
+     */
+    @Test
+    fun testMultipleToggleCycles_stateRemainsConsistent() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 5번 반복 토글
+        repeat(5) { i ->
+            // 열기
+            viewModel.onIntent(PresentationIntent.TogglePresentation)
+            assertTrue(viewModel.state.isPresentationWindowOpen, "사이클 ${i+1}: 열려야 함")
+            assertTrue(viewModel.state.isActive, "사이클 ${i+1}: 활성화 되어야 함")
+            assertEquals(PresentationMode.LOCAL_OVERLAY, viewModel.state.mode, "사이클 ${i+1}: LOCAL_OVERLAY")
+            
+            // 닫기
+            viewModel.onIntent(PresentationIntent.TogglePresentation)
+            assertFalse(viewModel.state.isPresentationWindowOpen, "사이클 ${i+1}: 닫혀야 함")
+            assertFalse(viewModel.state.isActive, "사이클 ${i+1}: 비활성화 되어야 함")
+            assertEquals(PresentationMode.NONE, viewModel.state.mode, "사이클 ${i+1}: NONE")
+        }
+    }
+    
+    // ============================================================
+    // Phase 2: Spacebar 토글 테스트
+    // ============================================================
+    
+    /**
+     * Spacebar: PPT OFF → ON (TogglePresentation으로 시뮬레이션)
+     */
+    @Test
+    fun testSpacebar_whenPPTOff_turnsOn() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        assertFalse(viewModel.state.isPresentationWindowOpen, "처음에는 꺼져있어야 함")
+        
+        // Spacebar = TogglePresentation
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "Spacebar로 켜져야 함")
+        assertTrue(viewModel.state.isActive, "활성화 되어야 함")
+    }
+    
+    /**
+     * Spacebar: PPT ON → OFF (TogglePresentation으로 시뮬레이션)
+     */
+    @Test
+    fun testSpacebar_whenPPTOn_turnsOff() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 먼저 켜기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        
+        // Spacebar = TogglePresentation으로 끄기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen, "Spacebar로 꺼져야 함")
+        assertFalse(viewModel.state.isActive, "비활성화 되어야 함")
+        assertEquals(PresentationMode.NONE, viewModel.state.mode)
+    }
+    
+    /**
+     * 연속 Spacebar 토글
+     */
+    @Test
+    fun testSpacebar_multipleToggles() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // OFF → ON
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        
+        // ON → OFF
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen)
+        
+        // OFF → ON
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        
+        // ON → OFF
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen)
+    }
+    
+    // ============================================================
+    // Phase 3: PPT ON/OFF 상태 동기화 테스트
+    // ============================================================
+    
+    /**
+     * ClosePresentation 후 상태 완전 초기화 확인
+     */
+    @Test
+    fun testClosePresentation_stateFullyReset() {
+        val monitorManager = FakeDualMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 열기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        assertTrue(viewModel.state.isActive)
+        assertEquals(PresentationMode.EXTERNAL, viewModel.state.mode)
+        
+        // 닫기
+        viewModel.onIntent(PresentationIntent.ClosePresentation)
+        
+        // 모든 상태 필드 초기화 확인
+        assertFalse(viewModel.state.isPresentationWindowOpen, "isPresentationWindowOpen은 false")
+        assertFalse(viewModel.state.isActive, "isActive는 false")
+        assertEquals(PresentationMode.NONE, viewModel.state.mode, "mode는 NONE")
+    }
+    
+    /**
+     * Toggle → Close → Toggle 사이클에서 상태 정확성
+     */
+    @Test
+    fun testToggleCloseToggle_stateSync() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // Toggle로 열기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "1차 열기")
+        
+        // Close로 닫기
+        viewModel.onIntent(PresentationIntent.ClosePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen, "Close로 닫기")
+        
+        // 다시 Toggle로 열기 — 1번의 토글로 바로 열려야 함 (2번 누를 필요 없음)
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "1번의 토글로 다시 열려야 함")
+        assertTrue(viewModel.state.isActive, "활성화 되어야 함")
+    }
+    
+    /**
+     * isPresentationWindowOpen, isActive, mode 모두 동기화 확인
+     */
+    @Test
+    fun testAllStateFieldsSynced_afterClose() {
+        val monitorManager = FakeDualMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 열기
+        viewModel.onIntent(PresentationIntent.TogglePresentation)
+        
+        // 세 필드 모두 "열려있음" 상태
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        assertTrue(viewModel.state.isActive)
+        assertEquals(PresentationMode.EXTERNAL, viewModel.state.mode)
+        
+        // 닫기
+        viewModel.onIntent(PresentationIntent.ClosePresentation)
+        
+        // 세 필드 모두 "닫혀있음" 상태 — 하나라도 다르면 버튼 동기화 실패
+        assertFalse(viewModel.state.isPresentationWindowOpen, "isPresentationWindowOpen 동기화 실패")
+        assertFalse(viewModel.state.isActive, "isActive 동기화 실패")
+        assertEquals(PresentationMode.NONE, viewModel.state.mode, "mode 동기화 실패")
+    }
+    
+    // ============================================================
+    // OpenPresentation (ON만) 테스트
+    // ============================================================
+    
+    /**
+     * OpenPresentation: OFF → ON
+     */
+    @Test
+    fun testOpenPresentation_whenOff_turnsOn() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        assertFalse(viewModel.state.isPresentationWindowOpen)
+        
+        viewModel.onIntent(PresentationIntent.OpenPresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "ON이 되어야 함")
+        assertTrue(viewModel.state.isActive, "활성화 되어야 함")
+    }
+    
+    /**
+     * OpenPresentation: 이미 ON이면 그대로 ON 유지 (토글 안 됨)
+     */
+    @Test
+    fun testOpenPresentation_whenAlreadyOn_staysOn() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // 먼저 ON
+        viewModel.onIntent(PresentationIntent.OpenPresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        
+        // 다시 Open → 여전히 ON (OFF로 전환되면 안 됨)
+        viewModel.onIntent(PresentationIntent.OpenPresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "이미 ON이면 ON 유지")
+        assertTrue(viewModel.state.isActive, "활성화 유지")
+    }
+    
+    /**
+     * Open → Close → Open 사이클
+     */
+    @Test
+    fun testOpenCloseOpen_cycle() {
+        val monitorManager = FakeSingleMonitorManager()
+        val navigationViewModel = NavigationViewModel(FakeBibleRepository())
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        
+        // Open
+        viewModel.onIntent(PresentationIntent.OpenPresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen)
+        
+        // Close
+        viewModel.onIntent(PresentationIntent.ClosePresentation)
+        assertFalse(viewModel.state.isPresentationWindowOpen)
+        
+        // Open again
+        viewModel.onIntent(PresentationIntent.OpenPresentation)
+        assertTrue(viewModel.state.isPresentationWindowOpen, "다시 열려야 함")
+    }
 }

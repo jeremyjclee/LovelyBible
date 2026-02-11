@@ -8,6 +8,8 @@ import com.lovelybible.domain.repository.BibleRepository
 import com.lovelybible.feature.navigation.NavigationViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -70,13 +72,37 @@ class SearchViewModelTest {
     }
     
     /**
+     * Helper function to create SearchViewModel with all dependencies
+     */
+    private fun createSearchViewModel(repository: BibleRepository, navigationViewModel: NavigationViewModel): SearchViewModel {
+        val settingsRepository = com.lovelybible.test.fake.FakeSettingsRepository()
+        val settingsViewModel = com.lovelybible.feature.settings.SettingsViewModel(settingsRepository)
+        val monitorManager = object : com.lovelybible.core.display.MonitorManager {
+            override fun hasExternalMonitor() = false
+            override fun getExternalDisplay() = null
+            override fun getAllDisplays() = emptyList<com.lovelybible.core.display.DisplayInfo>()
+            override fun getMonitorCount() = 1
+        }
+        val presentationViewModel = com.lovelybible.feature.presentation.PresentationViewModel(
+            monitorManager = monitorManager,
+            navigationViewModel = navigationViewModel
+        )
+        return SearchViewModel(
+            repository = repository,
+            navigationViewModel = navigationViewModel,
+            settingsViewModel = settingsViewModel,
+            presentationViewModel = presentationViewModel
+        )
+    }
+    
+    /**
      * 책 쿼리 입력 시 suggestions 업데이트 테스트
      */
     @Test
     fun testUpdateBookQuery_updatesSuggestions() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         // 초기 상태 확인
         assertTrue(viewModel.state.suggestions.isEmpty(), "초기 suggestions는 비어있어야 함")
@@ -100,7 +126,7 @@ class SearchViewModelTest {
     fun testUpdateBookQuery_emptyQuery_clearsSuggestions() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         // 먼저 검색어 입력
         viewModel.onIntent(SearchIntent.UpdateBookQuery("창"))
@@ -120,7 +146,7 @@ class SearchViewModelTest {
     fun testSelectBook() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         val book = repository.books[0]
         
@@ -132,6 +158,21 @@ class SearchViewModelTest {
         assertEquals(book, viewModel.state.selectedBook, "선택된 책이 설정되어야 함")
         assertEquals("창세기", viewModel.state.bookQuery, "bookQuery가 책 이름으로 설정되어야 함")
         assertTrue(viewModel.state.suggestions.isEmpty(), "suggestions가 비워져야 함")
+        // Effect 확인 logic 추가
+        val effects = mutableListOf<SearchEffect>()
+        val job = launch {
+            viewModel.effect.collect { effects.add(it) }
+        }
+        
+        // 다시 책 선택 (Effect 발생 확인용)
+        viewModel.onIntent(SearchIntent.SelectBook(book))
+        advanceUntilIdle()
+        
+        assertTrue(effects.any { 
+            it is SearchEffect.FocusField && it.field == SearchField.CHAPTER 
+        }, "FocusField(CHAPTER) effect should be emitted")
+        
+        job.cancel()
     }
     
     /**
@@ -141,7 +182,7 @@ class SearchViewModelTest {
     fun testUpdateChapterAndVerse() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         viewModel.onIntent(SearchIntent.UpdateChapter("5"))
         viewModel.onIntent(SearchIntent.UpdateVerse("10"))
@@ -157,7 +198,7 @@ class SearchViewModelTest {
     fun testExecuteSearch_success() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         val book = repository.books[0]
         
@@ -185,7 +226,7 @@ class SearchViewModelTest {
     fun testClearSearch() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         // 상태 설정
         viewModel.onIntent(SearchIntent.SelectBook(repository.books[0]))
@@ -207,7 +248,7 @@ class SearchViewModelTest {
     fun testSelectRecentSearch() = runTest {
         val repository = FakeBibleRepository()
         val navigationViewModel = NavigationViewModel(repository)
-        val viewModel = SearchViewModel(repository, navigationViewModel)
+        val viewModel = createSearchViewModel(repository, navigationViewModel)
         
         val position = BiblePosition("창", 1, 1)
         

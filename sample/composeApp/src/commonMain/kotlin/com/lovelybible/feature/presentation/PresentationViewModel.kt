@@ -48,6 +48,7 @@ class PresentationViewModel(
     fun onIntent(intent: PresentationIntent) {
         when (intent) {
             PresentationIntent.TogglePresentation -> togglePresentation()
+            PresentationIntent.OpenPresentation -> openPresentation()
             PresentationIntent.ClosePresentation -> closePresentation()
             PresentationIntent.RefreshMonitors -> refreshMonitors()
             is PresentationIntent.SetFontSizeLevel -> setFontSizeLevel(intent.level)

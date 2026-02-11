@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PresentToAll
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ fun DisplayPanel(
     state: NavigationState,
     onIntent: (NavigationIntent) -> Unit,
     presentationViewModel: com.lovelybible.feature.presentation.PresentationViewModel,
+    settingsViewModel: com.lovelybible.feature.settings.SettingsViewModel,
     focusRequester: FocusRequester = remember { FocusRequester() },
     modifier: Modifier = Modifier
 ) {
@@ -50,6 +52,9 @@ fun DisplayPanel(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+    
+    // 설정 다이얼로그 표시 상태
+    var showSettingsDialog by remember { mutableStateOf(false) }
     
     GlassCard(
         modifier = modifier
@@ -81,6 +86,24 @@ fun DisplayPanel(
             
             // 1. Preview Area (상단, 가변 높이)
             // PPT 화면과 동일한 비율/구성을 보여줌
+            // 상단 설정 버튼 (Overlap 방지)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, end = 8.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                IconButton(
+                    onClick = { showSettingsDialog = true },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "설정",
+                        tint = AppColors.TextSecondary
+                    )
+                }
+            }
+
             // 1. Preview Area (상단, 가변 높이)
             // PPT 화면과 동일한 비율/구성을 보여줌
             Box(
@@ -195,6 +218,25 @@ fun DisplayPanel(
                 }
             }
         }
+    }
+    
+    // 설정 다이얼로그
+    if (showSettingsDialog) {
+        com.lovelybible.feature.settings.SettingsDialog(
+            state = settingsViewModel.state,
+            onUpdateAutoPpt = { enabled ->
+                settingsViewModel.onIntent(
+                    com.lovelybible.feature.settings.SettingsIntent.UpdateAutoPptOnSearch(enabled)
+                )
+            },
+            onSave = {
+                settingsViewModel.onIntent(com.lovelybible.feature.settings.SettingsIntent.SaveSettings)
+            },
+            onCancel = {
+                settingsViewModel.onIntent(com.lovelybible.feature.settings.SettingsIntent.CancelSettings)
+            },
+            onDismiss = { showSettingsDialog = false }
+        )
     }
 }
 

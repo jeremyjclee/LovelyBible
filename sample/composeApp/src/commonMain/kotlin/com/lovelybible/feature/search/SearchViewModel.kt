@@ -14,14 +14,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 /**
  * 검색 화면 ViewModel (MVI 패턴)
  */
 class SearchViewModel(
     private val repository: BibleRepository,
-    private val navigationViewModel: NavigationViewModel
+    private val navigationViewModel: NavigationViewModel,
+    private val settingsViewModel: com.lovelybible.feature.settings.SettingsViewModel,
+    private val presentationViewModel: com.lovelybible.feature.presentation.PresentationViewModel
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -98,12 +102,24 @@ class SearchViewModel(
                 executeSearch(isAutoSearch = true)
             }
         } else {
-            // Enter/Tab 입력 시: 책만 선택
+            // Enter/Tab 입력 시 또는 버튼 클릭 시: 책만 선택하고 입력 필드 초기화
             state = state.copy(
                 selectedBook = book,
                 bookQuery = fullName,
-                suggestions = emptyList()
+                suggestions = emptyList(),
+                chapterInput = "", // 장 입력 필드 초기화 (바로 입력 가능하도록)
+                verseInput = ""    // 절 입력 필드 초기화
             )
+
+
+// ...
+
+            // 장 입력 필드로 포커스 이동 (Effect 사용)
+            // UI 상태 업데이트(제안 목록 사라짐 등) 후 안정화를 위해 약간의 지연 추가
+            scope.launch {
+                delay(100)
+                _effect.emit(SearchEffect.FocusField(SearchField.CHAPTER))
+            }
         }
     }
     
@@ -161,14 +177,26 @@ class SearchViewModel(
                         .distinctBy { "${it.book}-${it.chapter}-${it.verse}" }
                         .take(10)
                     
+                    state = state.copy(
+                        recentSearches = updatedRecent,
+                        isSearching = false
+                    )
+                    
+                    // 자동 PPT ON 기능: 설정이 켜져 있고, PPT가 아직 열리지 않았으며, 자동 검색(버튼 클릭)이 아닐 때만
+                    if (!isAutoSearch && 
+                        settingsViewModel.state.autoPptOnSearch && 
+                        !presentationViewModel.state.isPresentationWindowOpen) {
+                        presentationViewModel.onIntent(
+                            com.lovelybible.feature.presentation.PresentationIntent.OpenPresentation
+                        )
+                    }
+                    
                     if (isAutoSearch) {
                         // 버튼 클릭 자동 검색 후: 장/절 필드 비움
                         state = state.copy(
                             chapterInput = "",
                             verseInput = "",
-                            suggestions = emptyList(),
-                            recentSearches = updatedRecent,
-                            isSearching = false
+                            suggestions = emptyList()
                         )
                     } else {
                         // 일반 검색 후: 모든 필드 초기화

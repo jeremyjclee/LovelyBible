@@ -42,8 +42,14 @@ val appModule = module {
     // Presentation Layer - ViewModels
     // ============================================
     single { NavigationViewModel(repository = get()) }
-    single { SearchViewModel(repository = get(), navigationViewModel = get()) }
+    single { SearchViewModel(
+        repository = get(), 
+        navigationViewModel = get(),
+        settingsViewModel = get(),
+        presentationViewModel = get()
+    ) }
     single { PresentationViewModel(monitorManager = get(), navigationViewModel = get()) }
+    single { com.lovelybible.feature.settings.SettingsViewModel(repository = get()) }
 }
 
 /**
