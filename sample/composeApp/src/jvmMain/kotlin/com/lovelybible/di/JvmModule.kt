@@ -12,4 +12,5 @@ import org.koin.dsl.module
 val jvmModule = module {
     single<ResourceLoader> { JvmResourceLoader() }
     single<MonitorManager> { JvmMonitorManager() }
+    single<com.lovelybible.domain.repository.SettingsRepository> { com.lovelybible.data.repository.JvmSettingsRepository() }
 }

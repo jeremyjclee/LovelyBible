@@ -25,10 +25,17 @@ class SettingsViewModel(
     
     init {
         // 초기화: 저장소에서 설정 로드
-        val isAutoPptOn = repository.isAutoPptOnSearch()
-        val initialState = SettingsState(autoPptOnSearch = isAutoPptOn)
-        state = initialState
-        savedState = initialState.copy()
+        try {
+            val isAutoPptOn = repository.isAutoPptOnSearch()
+            val initialState = SettingsState(autoPptOnSearch = isAutoPptOn)
+            state = initialState
+            savedState = initialState.copy()
+        } catch (e: Exception) {
+            // 설정 로드 실패 시 기본값 사용
+            val initialState = SettingsState()
+            state = initialState
+            savedState = initialState.copy()
+        }
     }
     
     /**
@@ -55,7 +62,11 @@ class SettingsViewModel(
     private fun saveSettings() {
         savedState = state.copy()
         // Repository에 저장
-        repository.setAutoPptOnSearch(state.autoPptOnSearch)
+        try {
+            repository.setAutoPptOnSearch(state.autoPptOnSearch)
+        } catch (e: Exception) {
+            // 저장 실패 시 무시 (다음 실행 시 기본값 사용)
+        }
     }
     
     /**

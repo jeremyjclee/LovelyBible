@@ -120,16 +120,17 @@ fun SearchPanel(
                     },
                     onSelectBook = { book ->
                         isDeleting = false
-                        onIntent(SearchIntent.SelectBook(book, autoSearch = true))
-                        chapterFocusRequester.requestFocus()
+                        onIntent(SearchIntent.SelectBook(book, autoSearch = false))
                     },
                     onEnterOrTabPressed = {
                         // 첫 번째 제안이 있으면 선택, 없으면 그냥 다음으로 이동
                         if (state.suggestions.isNotEmpty()) {
                             isDeleting = false
                             onIntent(SearchIntent.SelectBook(state.suggestions.first(), autoSearch = false))
+                        } else {
+                            // 제안이 없을 때만 수동으로 포커스 이동 (제안 선택 시에는 VM에서 Effect 발생)
+                            chapterFocusRequester.requestFocus()
                         }
-                        chapterFocusRequester.requestFocus()
                     },
                     modifier = Modifier.weight(0.4f)
                 )
@@ -150,7 +151,14 @@ fun SearchPanel(
                         .onKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && 
                                 (event.key == Key.Enter || event.key == Key.Tab)) {
-                                verseFocusRequester.requestFocus()
+                                // 장 입력 상태에서 엔터/탭: 절이 입력되어 있으면 검색, 아니면 절 필드로 이동
+                                if (state.verseInput.isNotEmpty()) {
+                                    onIntent(SearchIntent.ExecuteSearch)
+                                    // 검색 후 책 이름 필드로 포커스 이동 (선택사항, UX에 따라 조정)
+                                    bookFocusRequester.requestFocus()
+                                } else {
+                                    verseFocusRequester.requestFocus()
+                                }
                                 true
                             } else {
                                 false
@@ -165,7 +173,14 @@ fun SearchPanel(
                         imeAction = ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(
-                        onNext = { verseFocusRequester.requestFocus() }
+                        onNext = { 
+                            if (state.verseInput.isNotEmpty()) {
+                                onIntent(SearchIntent.ExecuteSearch)
+                                bookFocusRequester.requestFocus()
+                            } else {
+                                verseFocusRequester.requestFocus() 
+                            }
+                        }
                     ),
                     singleLine = true,
                     colors = searchTextFieldColors()
@@ -187,9 +202,15 @@ fun SearchPanel(
                         .onKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && 
                                 (event.key == Key.Enter || event.key == Key.Tab)) {
-                                onIntent(SearchIntent.ExecuteSearch)
-                                // 검색 후 책 이름 필드로 포커스 이동
-                                bookFocusRequester.requestFocus()
+                                // 절 입력 상태에서 엔터/탭: 절이 입력되어 있으면 검색, 아니면 현 위치 유지
+                                if (state.verseInput.isNotEmpty()) {
+                                    onIntent(SearchIntent.ExecuteSearch)
+                                    // 검색 후 책 이름 필드로 포커스 이동
+                                    bookFocusRequester.requestFocus()
+                                } else {
+                                    // 절이 비어있으면 아무 동작 안함 (또는 포커스 유지)
+                                    verseFocusRequester.requestFocus()
+                                }
                                 true
                             } else {
                                 false
@@ -205,8 +226,10 @@ fun SearchPanel(
                     ),
                     keyboardActions = KeyboardActions(
                         onSearch = { 
-                            onIntent(SearchIntent.ExecuteSearch)
-                            bookFocusRequester.requestFocus()
+                            if (state.verseInput.isNotEmpty()) {
+                                onIntent(SearchIntent.ExecuteSearch)
+                                bookFocusRequester.requestFocus()
+                            }
                         }
                     ),
                     singleLine = true,

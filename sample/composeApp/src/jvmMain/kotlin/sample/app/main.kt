@@ -15,20 +15,43 @@ import com.lovelybible.feature.presentation.PresentationWindow
 import com.lovelybible.theme.LovelyBibleTheme
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
-import org.koin.java.KoinJavaComponent.inject
 import java.awt.Dimension
 
 fun main() {
     // Koin DI 초기화 - application 블록 외부에서 한 번만 실행
-    if (GlobalContext.getOrNull() == null) {
-        startKoin {
-            modules(allModules + jvmModule)
+    try {
+        if (GlobalContext.getOrNull() == null) {
+            startKoin {
+                modules(jvmModule + allModules)
+            }
         }
+    } catch (e: Exception) {
+        // DI 초기화 실패 시 에러 대화상자 표시
+        javax.swing.JOptionPane.showMessageDialog(
+            null,
+            "DI 초기화 실패: ${e.message}\n${e.stackTraceToString().take(1000)}",
+            "LovelyBible Error",
+            javax.swing.JOptionPane.ERROR_MESSAGE
+        )
+        return
     }
     
     // ViewModels 주입 - application 블록 외부에서 한 번만 실행
-    val navigationViewModel: NavigationViewModel by inject(NavigationViewModel::class.java)
-    val presentationViewModel: PresentationViewModel by inject(PresentationViewModel::class.java)
+    val navigationViewModel: NavigationViewModel
+    val presentationViewModel: PresentationViewModel
+    try {
+        navigationViewModel = GlobalContext.get().get()
+        presentationViewModel = GlobalContext.get().get()
+    } catch (e: Exception) {
+        // ViewModel 주입 실패 시 에러 대화상자 표시
+        javax.swing.JOptionPane.showMessageDialog(
+            null,
+            "ViewModel 주입 실패: ${e.message}\n${e.stackTraceToString().take(1000)}",
+            "LovelyBible Error",
+            javax.swing.JOptionPane.ERROR_MESSAGE
+        )
+        return
+    }
     
     application {
         val icon = painterResource("icon.png")
