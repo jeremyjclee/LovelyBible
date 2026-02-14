@@ -59,7 +59,7 @@ fun PresentationWindow(
         icon = icon,
         undecorated = true,  // 프레임 없음
         alwaysOnTop = true,
-        focusable = true,
+        focusable = false, // 중요: 포커스를 받지 않아야 메인 앱 클릭 시 PPT가 사라지지 않음
         onKeyEvent = { event ->
             handleKeyEvent(event, onClose, onAction)
         }
@@ -68,7 +68,8 @@ fun PresentationWindow(
             PresentationContent(
                 verses = state.currentVerses,
                 title = state.currentTitle,
-                fontSizeLevel = state.fontSizeLevel
+                fontSizeLevel = state.fontSizeLevel,
+                maxLineWidth = state.maxLineWidth
             )
         }
     }

@@ -16,4 +16,8 @@ sealed class SearchIntent {
     object ClearBookSelection : SearchIntent()  // 책 선택만 해제 (수정 모드 진입)
     data class SelectRecentSearch(val position: BiblePosition) : SearchIntent()
     object ClearRecentSearches : SearchIntent()  // 최근 검색 초기화
+    
+    // 키보드 네비게이션
+    data class MoveSuggestionFocus(val direction: Int) : SearchIntent() // -1(Up), 1(Down)
+    object SelectFocusedSuggestion : SearchIntent()
 }

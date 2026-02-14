@@ -8,6 +8,7 @@ import com.lovelybible.domain.model.Testament
 import com.lovelybible.domain.model.Verse
 import com.lovelybible.domain.repository.BibleRepository
 import com.lovelybible.feature.navigation.NavigationViewModel
+import com.lovelybible.test.fake.FakeSettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -113,7 +114,8 @@ class PresentationViewModelTest {
     fun testInitialState() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 초기 상태 확인
         assertFalse(viewModel.state.isActive, "초기 상태에서 프레젠테이션은 비활성화")
@@ -128,7 +130,8 @@ class PresentationViewModelTest {
     fun testTogglePresentation_singleMonitor() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 프레젠테이션 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -147,7 +150,8 @@ class PresentationViewModelTest {
     fun testTogglePresentation_dualMonitor() {
         val monitorManager = FakeDualMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 프레젠테이션 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -167,7 +171,8 @@ class PresentationViewModelTest {
     fun testClosePresentation() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 먼저 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -189,7 +194,8 @@ class PresentationViewModelTest {
     fun testTogglePresentation_openAndClose() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 첫 번째 토글: 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -207,7 +213,8 @@ class PresentationViewModelTest {
     fun testRefreshMonitors() {
         val monitorManager = FakeDualMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 모니터 정보 갱신
         viewModel.onIntent(PresentationIntent.RefreshMonitors)
@@ -227,7 +234,8 @@ class PresentationViewModelTest {
     fun testUpdateFromNavigation() = runTest {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         advanceUntilIdle() // Let NavigationViewModel init finish
         
         val testVerses = listOf(
@@ -250,7 +258,8 @@ class PresentationViewModelTest {
     fun testExternalDisplayInfo() {
         val monitorManager = FakeDualMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 프레젠테이션 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -273,10 +282,12 @@ class PresentationViewModelTest {
     fun testInitialFontSizeLevel() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
-        // 초기 폰트 크기 레벨은 4
-        assertEquals(4, viewModel.state.fontSizeLevel, "초기 폰트 크기 레벨은 4")
+        // 초기 폰트 크기 레벨은 4 -> 2로 변경됨. PLAN에서 2로 변경하기로 함. PresentationState 기본값 확인 필요.
+        // 하지만 State 기본값은 2로 변경했음. 테스트도 업데이트.
+        assertEquals(2, viewModel.state.fontSizeLevel, "초기 폰트 크기 레벨은 2")
     }
     
     /**
@@ -286,7 +297,8 @@ class PresentationViewModelTest {
     fun testSetFontSizeLevel() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 레벨 1 설정
         viewModel.onIntent(PresentationIntent.SetFontSizeLevel(1))
@@ -308,22 +320,23 @@ class PresentationViewModelTest {
     fun testSetFontSizeLevel_outOfRange() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
-        // 초기값 확인
-        assertEquals(4, viewModel.state.fontSizeLevel)
+        // 초기값 확인 (2)
+        assertEquals(2, viewModel.state.fontSizeLevel)
         
         // 범위 외 값 (0) - 무시되어야 함
         viewModel.onIntent(PresentationIntent.SetFontSizeLevel(0))
-        assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 0은 무시되어야 함")
+        assertEquals(2, viewModel.state.fontSizeLevel, "범위 외 값 0은 무시되어야 함")
         
         // 범위 외 값 (11) - 무시되어야 함
         viewModel.onIntent(PresentationIntent.SetFontSizeLevel(11))
-        assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 11은 무시되어야 함")
+        assertEquals(2, viewModel.state.fontSizeLevel, "범위 외 값 11은 무시되어야 함")
         
         // 범위 외 값 (-1) - 무시되어야 함
         viewModel.onIntent(PresentationIntent.SetFontSizeLevel(-1))
-        assertEquals(4, viewModel.state.fontSizeLevel, "범위 외 값 -1은 무시되어야 함")
+        assertEquals(2, viewModel.state.fontSizeLevel, "범위 외 값 -1은 무시되어야 함")
     }
     
     // ============================================================
@@ -337,7 +350,8 @@ class PresentationViewModelTest {
     fun testOnlyExplicitCloseCanClosePPT() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // PPT 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -358,7 +372,8 @@ class PresentationViewModelTest {
     fun testClosePresentation_afterToggle_stateIsCorrect() {
         val monitorManager = FakeDualMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // Toggle로 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -379,7 +394,8 @@ class PresentationViewModelTest {
     fun testMultipleToggleCycles_stateRemainsConsistent() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 5번 반복 토글
         repeat(5) { i ->
@@ -408,7 +424,8 @@ class PresentationViewModelTest {
     fun testSpacebar_whenPPTOff_turnsOn() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         assertFalse(viewModel.state.isPresentationWindowOpen, "처음에는 꺼져있어야 함")
         
@@ -425,7 +442,8 @@ class PresentationViewModelTest {
     fun testSpacebar_whenPPTOn_turnsOff() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 먼저 켜기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -445,7 +463,8 @@ class PresentationViewModelTest {
     fun testSpacebar_multipleToggles() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // OFF → ON
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -475,7 +494,8 @@ class PresentationViewModelTest {
     fun testClosePresentation_stateFullyReset() {
         val monitorManager = FakeDualMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -499,7 +519,8 @@ class PresentationViewModelTest {
     fun testToggleCloseToggle_stateSync() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // Toggle로 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -522,7 +543,8 @@ class PresentationViewModelTest {
     fun testAllStateFieldsSynced_afterClose() {
         val monitorManager = FakeDualMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 열기
         viewModel.onIntent(PresentationIntent.TogglePresentation)
@@ -552,7 +574,8 @@ class PresentationViewModelTest {
     fun testOpenPresentation_whenOff_turnsOn() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         assertFalse(viewModel.state.isPresentationWindowOpen)
         
@@ -568,7 +591,8 @@ class PresentationViewModelTest {
     fun testOpenPresentation_whenAlreadyOn_staysOn() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // 먼저 ON
         viewModel.onIntent(PresentationIntent.OpenPresentation)
@@ -587,7 +611,8 @@ class PresentationViewModelTest {
     fun testOpenCloseOpen_cycle() {
         val monitorManager = FakeSingleMonitorManager()
         val navigationViewModel = NavigationViewModel(FakeBibleRepository())
-        val viewModel = PresentationViewModel(monitorManager, navigationViewModel)
+        val settingsRepository = FakeSettingsRepository()
+        val viewModel = PresentationViewModel(monitorManager, navigationViewModel, settingsRepository)
         
         // Open
         viewModel.onIntent(PresentationIntent.OpenPresentation)

@@ -10,4 +10,12 @@ class FakeSettingsRepository : SettingsRepository {
     override fun setAutoPptOnSearch(enabled: Boolean) {
         isAutoPptOn = enabled
     }
+
+    private var maxLineWidth = 1300 // default
+
+    override fun getMaxLineWidth(): Int = maxLineWidth
+
+    override fun setMaxLineWidth(width: Int) {
+        maxLineWidth = width
+    }
 }

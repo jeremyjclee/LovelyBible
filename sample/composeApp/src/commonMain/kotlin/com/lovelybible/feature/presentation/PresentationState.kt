@@ -23,5 +23,6 @@ data class PresentationState(
     val currentVerses: List<Verse> = emptyList(),
     val currentTitle: String = "",
     val mode: PresentationMode = PresentationMode.NONE,
-    val fontSizeLevel: Int = 4  // 1~10단계, 기본값 4 (50.sp)
+    val fontSizeLevel: Int = 2,  // 1~10단계, 기본값 2 (40.sp)
+    val maxLineWidth: Int = 1120
 )

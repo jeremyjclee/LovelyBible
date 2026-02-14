@@ -2,6 +2,8 @@ package com.lovelybible.feature.search
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -71,11 +73,12 @@ fun SearchPanel(
     
     // 자동 선택: 후보가 1개일 때 자동으로 선택하고 장 필드로 이동
     // 단, Backspace로 지우는 중이 아닐 때만 적용
-    LaunchedEffect(state.suggestions, isDeleting) {
+    LaunchedEffect(state.suggestions, isDeleting, state.isChoSungMatch) {
         if (state.suggestions.size == 1 && 
             state.selectedBook == null && 
             state.bookQuery.isNotBlank() &&
-            !isDeleting) {
+            !isDeleting &&
+            !state.isChoSungMatch) {
             onIntent(SearchIntent.SelectBook(state.suggestions.first(), autoSearch = false))
             chapterFocusRequester.requestFocus()
         }
@@ -105,6 +108,7 @@ fun SearchPanel(
                     query = state.bookQuery,
                     suggestions = state.suggestions,
                     isBookSelected = state.selectedBook != null,
+                    focusedIndex = state.focusedSuggestionIndex,
                     focusRequester = bookFocusRequester,
                     onQueryChange = { newQuery ->
                         // 쿼리가 변경되면 선택된 책 초기화 (수정 모드로 전환)
@@ -121,6 +125,12 @@ fun SearchPanel(
                     onSelectBook = { book ->
                         isDeleting = false
                         onIntent(SearchIntent.SelectBook(book, autoSearch = false))
+                    },
+                    onNavigateSuggestion = { direction ->
+                         onIntent(SearchIntent.MoveSuggestionFocus(direction))
+                    },
+                    onSelectFocused = {
+                         onIntent(SearchIntent.SelectFocusedSuggestion)
                     },
                     onEnterOrTabPressed = {
                         // 첫 번째 제안이 있으면 선택, 없으면 그냥 다음으로 이동
@@ -355,9 +365,12 @@ fun BookSearchField(
     query: String,
     suggestions: List<Book>,
     isBookSelected: Boolean,
+    focusedIndex: Int = -1, // 포커스된 제안 인덱스
     focusRequester: FocusRequester,
     onQueryChange: (String) -> Unit,
     onSelectBook: (Book) -> Unit,
+    onNavigateSuggestion: (Int) -> Unit, // 방향키 네비게이션 (-1: Up, 1: Down)
+    onSelectFocused: () -> Unit, // 포커스된 항목 선택 (Enter)
     onEnterOrTabPressed: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -381,11 +394,28 @@ fun BookSearchField(
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
-                .onKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown && 
-                        (event.key == Key.Enter || event.key == Key.Tab)) {
-                        onEnterOrTabPressed()
-                        true
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown) {
+                        when (event.key) {
+                            Key.DirectionUp -> {
+                                onNavigateSuggestion(-1)
+                                true
+                            }
+                            Key.DirectionDown -> {
+                                onNavigateSuggestion(1)
+                                true
+                            }
+                            Key.Enter, Key.Tab -> {
+                                if (focusedIndex != -1) {
+                                    onSelectFocused()
+                                    true
+                                } else {
+                                    onEnterOrTabPressed()
+                                    true
+                                }
+                            }
+                            else -> false
+                        }
                     } else {
                         false
                     }
@@ -419,23 +449,32 @@ fun BookSearchField(
                 shadowElevation = 4.dp
             ) {
                 Column {
-                    suggestions.take(5).forEach { book ->
+                    suggestions.take(5).forEachIndexed { index, book ->
                         val fullName = BibleBookNames.toFullName(book.name)
+                        val isFocused = index == focusedIndex
+                        
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .background(if (isFocused) AppColors.Accent.copy(alpha = 0.1f) else Color.Transparent)
                                 .clickable { onSelectBook(book) }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                .then(
+                                    if (isFocused) Modifier.then(
+                                        Modifier.border(1.dp, AppColors.Accent, RoundedCornerShape(4.dp))
+                                    ) else Modifier
+                                ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = fullName,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = AppColors.TextPrimary
+                                color = if (isFocused) AppColors.Accent else AppColors.TextPrimary,
+                                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                         
-                        if (book != suggestions.last()) {
+                        if (index < suggestions.take(5).lastIndex) {
                             HorizontalDivider(
                                 color = AppColors.BorderColor.copy(alpha = 0.3f),
                                 modifier = Modifier.padding(horizontal = 8.dp)

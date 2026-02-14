@@ -85,7 +85,8 @@ class SearchViewModelTest {
         }
         val presentationViewModel = com.lovelybible.feature.presentation.PresentationViewModel(
             monitorManager = monitorManager,
-            navigationViewModel = navigationViewModel
+            navigationViewModel = navigationViewModel,
+            settingsRepository = settingsRepository
         )
         return SearchViewModel(
             repository = repository,

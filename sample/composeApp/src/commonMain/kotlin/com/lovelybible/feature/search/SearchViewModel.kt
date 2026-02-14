@@ -50,6 +50,8 @@ class SearchViewModel(
             SearchIntent.ClearBookSelection -> clearBookSelection()
             is SearchIntent.SelectRecentSearch -> selectRecentSearch(intent.position)
             SearchIntent.ClearRecentSearches -> clearRecentSearches()
+            is SearchIntent.MoveSuggestionFocus -> moveSuggestionFocus(intent.direction)
+            SearchIntent.SelectFocusedSuggestion -> selectFocusedSuggestion()
         }
     }
     
@@ -58,7 +60,12 @@ class SearchViewModel(
     }
     
     private fun updateBookQuery(query: String) {
-        state = state.copy(bookQuery = query)
+        // 쿼리 변경 시 포커스 및 초성 여부 초기화
+        state = state.copy(
+            bookQuery = query,
+            focusedSuggestionIndex = -1,
+            isChoSungMatch = false
+        )
         
         if (query.isBlank()) {
             state = state.copy(suggestions = emptyList())
@@ -67,11 +74,40 @@ class SearchViewModel(
         
         scope.launch {
             try {
+                // 초성 검색 확인 및 목록 조회
+                val isChoSung = BibleBookNames.isChoSungOnly(query)
                 val suggestions = repository.searchBooks(query)
-                state = state.copy(suggestions = suggestions)
+                
+                state = state.copy(
+                    suggestions = suggestions,
+                    isChoSungMatch = isChoSung
+                )
+                
+                // 제안 항목이 1개이고 초성 검색이 아닐 경우에만 자동 선택 로직은 UI(SearchPanel)에서 처리함 (삭제 중 자동선택 방지 위해)
+                // if (suggestions.size == 1 && !isChoSung) {
+                //    selectBook(suggestions.first(), autoSearch = false)
+                // }
             } catch (e: Exception) {
                 state = state.copy(error = "책 검색 실패: ${e.message}")
             }
+        }
+    }
+    
+    private fun moveSuggestionFocus(direction: Int) {
+        if (state.suggestions.isEmpty()) return
+        
+        val currentIndex = state.focusedSuggestionIndex
+        val newIndex = (currentIndex + direction).coerceIn(0, state.suggestions.lastIndex)
+        
+        if (currentIndex != newIndex) {
+            state = state.copy(focusedSuggestionIndex = newIndex)
+        }
+    }
+    
+    private fun selectFocusedSuggestion() {
+        val index = state.focusedSuggestionIndex
+        if (index in state.suggestions.indices) {
+            selectBook(state.suggestions[index], autoSearch = false)
         }
     }
     
@@ -93,7 +129,9 @@ class SearchViewModel(
                 bookQuery = fullName,
                 chapterInput = "1",
                 verseInput = "1",
-                suggestions = emptyList()
+                suggestions = emptyList(),
+                focusedSuggestionIndex = -1,
+                isChoSungMatch = false
             )
             
             // 즉시 검색 실행
@@ -107,11 +145,10 @@ class SearchViewModel(
                 bookQuery = fullName,
                 suggestions = emptyList(),
                 chapterInput = "", // 장 입력 필드 초기화 (바로 입력 가능하도록)
-                verseInput = ""    // 절 입력 필드 초기화
+                verseInput = "",    // 절 입력 필드 초기화
+                focusedSuggestionIndex = -1,
+                isChoSungMatch = false
             )
-
-
-// ...
 
             // 장 입력 필드로 포커스 이동 (Effect 사용)
             // UI 상태 업데이트(제안 목록 사라짐 등) 후 안정화를 위해 약간의 지연 추가

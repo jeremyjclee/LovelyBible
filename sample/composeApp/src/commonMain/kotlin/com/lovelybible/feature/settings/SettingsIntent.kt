@@ -10,6 +10,11 @@ sealed class SettingsIntent {
     data class UpdateAutoPptOnSearch(val enabled: Boolean) : SettingsIntent()
     
     /**
+     * 최대 줄 너비 설정 변경 (0~1920)
+     */
+    data class UpdateMaxLineWidth(val width: Int) : SettingsIntent()
+    
+    /**
      * 설정 저장 (tempState → savedState)
      */
     object SaveSettings : SettingsIntent()

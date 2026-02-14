@@ -57,7 +57,8 @@ private fun getFontSizeForLevel(level: Int): Int {
 fun PresentationContent(
     verses: List<Verse>,
     title: String,
-    fontSizeLevel: Int = 4,
+    fontSizeLevel: Int = 2, // 기본값 2 (40.sp) - 요청사항 1
+    maxLineWidth: Int = 1300, // 기본값 1300dp (하위 호환)
     scaleFactor: Float = 1.0f,  // 기본값 1.0 (전체화면용)
     modifier: Modifier = Modifier
 ) {
@@ -80,24 +81,13 @@ fun PresentationContent(
             )
         }
         
-        // 고정된 최대 너비 설정 (1300dp 기준, scaleFactor 적용)
-        // 폰트 크기와 관계없이 일정한 화면 비율 유지
-        // 큰 폰트 → 적은 글자/줄, 작은 폰트 → 많은 글자/줄
-        val fixedMaxWidth = (1300 * scaleFactor).dp
-        
-        /* 
-         * 변경 내역:
-         * scaleFactor 추가: 앱 화면(0.4)과 PPT 화면(1.0)에서 동일한 시각적 밀도 제공
-         */
-        
-        // padding도 scaleFactor 적용
-        val paddingSize = (80 * scaleFactor).dp
+        // 고정된 최대 너비 설정 (maxLineWidth 기준, scaleFactor 적용)
+        val fixedMaxWidth = (maxLineWidth * scaleFactor).dp
         
         // IntrinsicSize.Min을 사용하여 가장 긴 줄에 맞춰 중앙 정렬 (최대 너비는 고정값으로 제한)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .padding(paddingSize)
                 .widthIn(max = fixedMaxWidth)
         ) {
             // 콘텐츠를 IntrinsicSize로 감싸서 가장 긴 줄 기준 정렬

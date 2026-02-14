@@ -18,7 +18,8 @@ import kotlinx.coroutines.launch
  */
 class PresentationViewModel(
     private val monitorManager: MonitorManager,
-    private val navigationViewModel: NavigationViewModel
+    private val navigationViewModel: NavigationViewModel,
+    private val settingsRepository: com.lovelybible.domain.repository.SettingsRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -37,6 +38,10 @@ class PresentationViewModel(
                 )
             }
         }
+        
+        // 설정 로드
+        val maxLines = settingsRepository.getMaxLineWidth()
+        state = state.copy(maxLineWidth = maxLines)
         
         // 모니터 정보 초기화
         refreshMonitors()
@@ -57,6 +62,13 @@ class PresentationViewModel(
             PresentationIntent.NavigateNext -> navigationViewModel.onIntent(com.lovelybible.feature.navigation.NavigationIntent.NavigateNext)
             PresentationIntent.NavigatePrevious -> navigationViewModel.onIntent(com.lovelybible.feature.navigation.NavigationIntent.NavigatePrevious)
         }
+    }
+
+    /**
+     * 최대 줄 너비 업데이트
+     */
+    fun updateMaxLineWidth(width: Int) {
+        state = state.copy(maxLineWidth = width)
     }
     
     /**

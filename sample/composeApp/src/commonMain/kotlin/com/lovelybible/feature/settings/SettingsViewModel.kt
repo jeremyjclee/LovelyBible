@@ -27,7 +27,11 @@ class SettingsViewModel(
         // 초기화: 저장소에서 설정 로드
         try {
             val isAutoPptOn = repository.isAutoPptOnSearch()
-            val initialState = SettingsState(autoPptOnSearch = isAutoPptOn)
+            val maxLines = repository.getMaxLineWidth()
+            val initialState = SettingsState(
+                autoPptOnSearch = isAutoPptOn,
+                maxLineWidth = maxLines
+            )
             state = initialState
             savedState = initialState.copy()
         } catch (e: Exception) {
@@ -44,6 +48,7 @@ class SettingsViewModel(
     fun onIntent(intent: SettingsIntent) {
         when (intent) {
             is SettingsIntent.UpdateAutoPptOnSearch -> updateAutoPptOnSearch(intent.enabled)
+            is SettingsIntent.UpdateMaxLineWidth -> updateMaxLineWidth(intent.width)
             SettingsIntent.SaveSettings -> saveSettings()
             SettingsIntent.CancelSettings -> cancelSettings()
         }
@@ -55,6 +60,15 @@ class SettingsViewModel(
     private fun updateAutoPptOnSearch(enabled: Boolean) {
         state = state.copy(autoPptOnSearch = enabled)
     }
+
+    /**
+     * 최대 줄 너비 변경 (tempState만 수정)
+     */
+    private fun updateMaxLineWidth(width: Int) {
+        // 유효성 검사 (0~1920)
+        val safeWidth = width.coerceIn(0, 1920)
+        state = state.copy(maxLineWidth = safeWidth)
+    }
     
     /**
      * 설정 저장 (tempState → savedState 커밋 & Repository 저장)
@@ -64,6 +78,7 @@ class SettingsViewModel(
         // Repository에 저장
         try {
             repository.setAutoPptOnSearch(state.autoPptOnSearch)
+            repository.setMaxLineWidth(state.maxLineWidth)
         } catch (e: Exception) {
             // 저장 실패 시 무시 (다음 실행 시 기본값 사용)
         }

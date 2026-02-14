@@ -220,109 +220,63 @@ object BibleBookNames {
     }
     
     /**
-     * 검색 쿼리로 책 찾기 (줄임말, 풀네임, 부분일치 모두 지원)
-     * 한글 자모 분리를 통해 종성 없이 입력해도 매칭됨
-     * 예: "여" → "여호수아", "역대상", "역대하" 모두 매칭
+     * 문자열의 초성만 추출
+     * 예: "창세기" -> "ㅊㅅㄱ"
+     */
+    fun getChoSung(text: String): String {
+        val sb = StringBuilder()
+        for (char in text) {
+            val decomposed = decomposeHangul(char)
+            if (decomposed != null) {
+                sb.append(CHOSEONG[decomposed.first])
+            } else {
+                sb.append(char) // 한글이 아니면 그대로 유지
+            }
+        }
+        return sb.toString()
+    }
+
+    /**
+     * 문자열이 초성으로만 구성되어 있는지 확인
+     */
+    fun isChoSungOnly(text: String): Boolean {
+        return text.all { char -> CHOSEONG.contains(char) }
+    }
+
+    /**
+     * 초성 매칭 확인
+     * query가 text의 초성과 일치하는지 (StartsWith 또는 Contains)
+     */
+    fun matchChoSung(text: String, query: String): Boolean {
+        if (query.isEmpty()) return true
+        val textChoSung = getChoSung(text)
+        return textChoSung.startsWith(query) || textChoSung.contains(query)
+    }
+
+    /**
+     * 검색 쿼리로 책 찾기 (줄임말, 풀네임, 부분일치, 초성검색 모두 지원)
      */
     fun matchesQuery(bookShortName: String, query: String): Boolean {
         if (query.isBlank()) return false
-        val lowerQuery = query.lowercase()
-        val fullName = toFullName(bookShortName).lowercase()
-        val shortName = bookShortName.lowercase()
+        val lowerQuery = query.lowercase() // 영어일 경우 소문자 변환
+        val fullName = toFullName(bookShortName) // 이름은 그대로 사용 (한글 처리 위해)
+        val shortName = bookShortName
+
+        // 1. 기본 텍스트 매칭 (Contains / StartsWith)
+        if (shortName.contains(query) || fullName.contains(query)) return true
+
+        // 2. 한글 자모 분리 매칭 (종성 무시 - "창세" -> "창섹" 매칭 등)
+        // 기존 로직 유지 (koreanStartsWith 등)
+        if (koreanStartsWith(shortName, query) || koreanStartsWith(fullName, query)) return true
         
-        // 기존 정확한 매칭 (빠른 경로)
-        if (shortName.contains(lowerQuery) || 
-            fullName.contains(lowerQuery) ||
-            shortName.startsWith(lowerQuery) ||
-            fullName.startsWith(lowerQuery)) {
-            return true
-        }
-        
-        // 한글 자모 분리 기반 매칭 (종성 허용)
-        if (koreanStartsWith(shortName, lowerQuery) ||
-            koreanStartsWith(fullName, lowerQuery) ||
-            koreanContains(shortName, lowerQuery) ||
-            koreanContains(fullName, lowerQuery)) {
-            return true
-        }
-        
-        // 종성을 다음 글자의 초성으로 해석하여 매칭 (예: "삿" -> "사" + "ㅅ" -> "사신", "사도신경")
-        // 쿼리의 마지막 글자가 종성이 있는 경우에만 시도
-        if (lowerQuery.isNotEmpty()) {
-            val lastChar = lowerQuery.last()
-            val decomposed = decomposeHangul(lastChar)
-            
-            // 종성이 있는 경우 (third != 0)
-            if (decomposed != null && decomposed.third != 0) {
-                // 종성을 초성으로 변환할 수 있는지 매핑 (간단히 초성 인덱스와 종성 인덱스가 유사하다고 가정하거나 매핑 테이블 필요)
-                // 하지만 종성 인덱스와 초성 인덱스는 다르므로 변환 필요
-                val jongsungIdx = decomposed.third
-                val choseongChar = jongsungToChoseong(jongsungIdx)
-                
-                if (choseongChar != null) {
-                    // "삿" -> "사"
-                    val queryWithoutJongsung = lowerQuery.substring(0, lowerQuery.length - 1) + 
-                        composeHangul(decomposed.first, decomposed.second, 0)
-                    
-                    // "사" + "ㅅ" 패턴으로 검색
-                    // 대상 문자열이 "사"로 시작하고, 그 다음 글자의 초성이 "ㅅ"인지 확인
-                    if (matchSplitQuery(shortName, queryWithoutJongsung, choseongChar) ||
-                        matchSplitQuery(fullName, queryWithoutJongsung, choseongChar)) {
-                        return true
-                    }
-                }
+        // 3. 초성 검색 (Query가 초성으로만 이루어진 경우)
+        if (isChoSungOnly(query)) {
+            if (matchChoSung(shortName, query) || matchChoSung(fullName, query)) {
+                return true
             }
         }
-        
+
         return false
-    }
-    
-    /**
-     * 종성 인덱스를 초성 문자로 변환
-     */
-    private fun jongsungToChoseong(jongsungIdx: Int): Char? {
-        // 종성 목록: (0: 없음), 1:ㄱ, 2:ㄲ, 3:ㄳ, 4:ㄴ, 5:ㄵ, 6:ㄶ, 7:ㄷ, 8:ㄹ, 9:ㄺ, 10:ㄻ, 11:ㄼ, 12:ㄽ, 13:ㄾ, 14:ㄿ, 15:ㅀ, 16:ㅁ, 17:ㅂ, 18:ㅄ, 19:ㅅ, 20:ㅆ, 21:ㅇ, 22:ㅈ, 23:ㅊ, 24:ㅋ, 25:ㅌ, 26:ㅍ, 27:ㅎ
-        // 초성 목록: ㄱ, ㄲ, ㄴ, ㄷ, ㄸ, ㄹ, ㅁ, ㅂ, ㅃ, ㅅ, ㅆ, ㅇ, ㅈ, ㅉ, ㅊ, ㅋ, ㅌ, ㅍ, ㅎ
-        
-        return when (jongsungIdx) {
-            1 -> 'ㄱ' // ㄱ
-            2 -> 'ㄲ' // ㄲ
-            4 -> 'ㄴ' // ㄴ
-            7 -> 'ㄷ' // ㄷ
-            8 -> 'ㄹ' // ㄹ
-            16 -> 'ㅁ' // ㅁ
-            17 -> 'ㅂ' // ㅂ
-            19 -> 'ㅅ' // ㅅ
-            20 -> 'ㅆ' // ㅆ
-            21 -> 'ㅇ' // ㅇ
-            22 -> 'ㅈ' // ㅈ
-            23 -> 'ㅊ' // ㅊ
-            24 -> 'ㅋ' // ㅋ
-            25 -> 'ㅌ' // ㅌ
-            26 -> 'ㅍ' // ㅍ
-            27 -> 'ㅎ' // ㅎ
-            else -> null // 복합 종성(ㄳ, ㄵ 등)은 단순 매핑 제외
-        }
-    }
-    
-    /**
-     * 초성, 중성, 종성으로 한글 글자 조합
-     */
-    private fun composeHangul(choseong: Int, jungsung: Int, jongsung: Int): Char {
-        return (0xAC00 + (choseong * 21 * 28) + (jungsung * 28) + jongsung).toChar()
-    }
-    
-    /**
-     * 분리된 쿼리 매칭 ("사", 'ㅅ' -> "사도신경" 매칭)
-     */
-    private fun matchSplitQuery(text: String, firstPart: String, secondPartChoseong: Char): Boolean {
-        if (!text.startsWith(firstPart)) return false
-        if (text.length <= firstPart.length) return false
-        
-        val nextChar = text[firstPart.length]
-        val nextDecomp = decomposeHangul(nextChar) ?: return false
-        
-        return CHOSEONG[nextDecomp.first] == secondPartChoseong
     }
     
     /**

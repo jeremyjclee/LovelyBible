@@ -8,7 +8,7 @@ class AppVersionTest {
     
     @Test
     fun testAppVersion_isCorrect() {
-        assertEquals("1.0.5", APP_VERSION)
+        assertEquals("1.0.6", APP_VERSION)
     }
     
     @Test

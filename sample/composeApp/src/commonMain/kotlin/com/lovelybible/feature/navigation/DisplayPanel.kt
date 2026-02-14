@@ -139,6 +139,7 @@ fun DisplayPanel(
                             verses = state.displayedVerses,
                             title = state.currentTitle,
                             fontSizeLevel = presentationViewModel.state.fontSizeLevel,
+                            maxLineWidth = presentationViewModel.state.maxLineWidth,
                             scaleFactor = scale,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -204,7 +205,7 @@ fun DisplayPanel(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            if (presentationViewModel.state.isPresentationWindowOpen) 
+                            text = if (presentationViewModel.state.isPresentationWindowOpen) 
                                 "PPT 종료" else "PPT 모드"
                         )
                     }
@@ -228,6 +229,13 @@ fun DisplayPanel(
                 settingsViewModel.onIntent(
                     com.lovelybible.feature.settings.SettingsIntent.UpdateAutoPptOnSearch(enabled)
                 )
+            },
+            onUpdateMaxLineWidth = { width ->
+                settingsViewModel.onIntent(
+                    com.lovelybible.feature.settings.SettingsIntent.UpdateMaxLineWidth(width)
+                )
+                // 즉시 미리보기에 반영하기 위해 PresentationViewModel에도 업데이트
+                presentationViewModel.updateMaxLineWidth(width)
             },
             onSave = {
                 settingsViewModel.onIntent(com.lovelybible.feature.settings.SettingsIntent.SaveSettings)
