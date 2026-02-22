@@ -64,9 +64,9 @@ class NavigationViewModel(
     private fun navigateToPosition(position: BiblePosition) {
         scope.launch {
             try {
-                // 책 변경 시 페이지 크기 기본값 설정 (사도신경: 5, 그 외: 1)
+                // 책 변경 시 페이지 크기 기본값 설정 (모두 기본 1)
                 if (position.book != state.currentPosition?.book) {
-                    val defaultPageSize = if (position.book == "사신" || position.book == "사도신경") 5 else 1
+                    val defaultPageSize = 1
                     state = state.copy(
                         pageSize = defaultPageSize,
                         isLoading = true,
