@@ -54,7 +54,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe)
             packageName = "LovelyBible"
-            packageVersion = "1.0.6"
+            packageVersion = "1.0.7"
             description = "Bible Presentation App"
             copyright = "Copyright 2026 LovelyBible"
             vendor = "LovelyBibleTeam"
