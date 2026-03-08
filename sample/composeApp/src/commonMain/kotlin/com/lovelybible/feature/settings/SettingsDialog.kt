@@ -22,7 +22,8 @@ import com.lovelybible.theme.AppColors
 fun SettingsDialog(
     state: SettingsState,
     onUpdateAutoPpt: (Boolean) -> Unit,
-    onUpdateMaxLineWidth: (Int) -> Unit,
+    onUpdateMaxLineWidthBible: (Int) -> Unit,
+    onUpdateMaxLineWidthCreed: (Int) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
     onDismiss: () -> Unit
@@ -62,12 +63,21 @@ fun SettingsDialog(
                         onCheckedChange = onUpdateAutoPpt
                     )
 
-                    // 한 줄 최대 길이 (Max Line Width)
+                    // 한 줄 최대 길이 (일반 성경)
                     NumberSettingItem(
-                        title = "한 줄 최대 길이 (dp)",
-                        description = "PPT 모드에서 한 줄의 최대 너비를 설정합니다 (0~1920)",
-                        value = state.maxLineWidth,
-                        onValueChange = onUpdateMaxLineWidth,
+                        title = "일반성경 - 한 줄 최대 길이",
+                        description = "일반성경의 한 줄 최대 길이를 설정\n(0~1920)",
+                        value = state.maxLineWidthBible,
+                        onValueChange = onUpdateMaxLineWidthBible,
+                        range = 0..1920
+                    )
+
+                    // 한 줄 최대 길이 (사도신경)
+                    NumberSettingItem(
+                        title = "사도신경 - 한 줄 최대 길이",
+                        description = "사도신경의 한 줄 최대 길이를 설정\n(0~1920)",
+                        value = state.maxLineWidthCreed,
+                        onValueChange = onUpdateMaxLineWidthCreed,
                         range = 0..1920
                     )
                 }

@@ -58,7 +58,8 @@ fun PresentationContent(
     verses: List<Verse>,
     title: String,
     fontSizeLevel: Int = 2, // 기본값 2 (40.sp) - 요청사항 1
-    maxLineWidth: Int = 1300, // 기본값 1300dp (하위 호환)
+    maxLineWidthBible: Int = 900,
+    maxLineWidthCreed: Int = 1120,
     scaleFactor: Float = 1.0f,  // 기본값 1.0 (전체화면용)
     modifier: Modifier = Modifier
 ) {
@@ -82,6 +83,7 @@ fun PresentationContent(
         }
         
         // 고정된 최대 너비 설정 (maxLineWidth 기준, scaleFactor 적용)
+        val maxLineWidth = if (verses.any { it.bookName == "사신" }) maxLineWidthCreed else maxLineWidthBible
         val fixedMaxWidth = (maxLineWidth * scaleFactor).dp
         
         // IntrinsicSize.Min을 사용하여 가장 긴 줄에 맞춰 중앙 정렬 (최대 너비는 고정값으로 제한)

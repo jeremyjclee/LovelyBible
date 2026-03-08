@@ -139,7 +139,8 @@ fun DisplayPanel(
                             verses = state.displayedVerses,
                             title = state.currentTitle,
                             fontSizeLevel = presentationViewModel.state.fontSizeLevel,
-                            maxLineWidth = presentationViewModel.state.maxLineWidth,
+                            maxLineWidthBible = presentationViewModel.state.maxLineWidthBible,
+                            maxLineWidthCreed = presentationViewModel.state.maxLineWidthCreed,
                             scaleFactor = scale,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -230,12 +231,17 @@ fun DisplayPanel(
                     com.lovelybible.feature.settings.SettingsIntent.UpdateAutoPptOnSearch(enabled)
                 )
             },
-            onUpdateMaxLineWidth = { width ->
+            onUpdateMaxLineWidthBible = { width ->
                 settingsViewModel.onIntent(
-                    com.lovelybible.feature.settings.SettingsIntent.UpdateMaxLineWidth(width)
+                    com.lovelybible.feature.settings.SettingsIntent.UpdateMaxLineWidthBible(width)
                 )
-                // 즉시 미리보기에 반영하기 위해 PresentationViewModel에도 업데이트
-                presentationViewModel.updateMaxLineWidth(width)
+                presentationViewModel.updateMaxLineWidthBible(width)
+            },
+            onUpdateMaxLineWidthCreed = { width ->
+                settingsViewModel.onIntent(
+                    com.lovelybible.feature.settings.SettingsIntent.UpdateMaxLineWidthCreed(width)
+                )
+                presentationViewModel.updateMaxLineWidthCreed(width)
             },
             onSave = {
                 settingsViewModel.onIntent(com.lovelybible.feature.settings.SettingsIntent.SaveSettings)

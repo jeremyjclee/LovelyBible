@@ -4,6 +4,9 @@ interface SettingsRepository {
     fun isAutoPptOnSearch(): Boolean
     fun setAutoPptOnSearch(enabled: Boolean)
 
-    fun getMaxLineWidth(): Int
-    fun setMaxLineWidth(width: Int)
+    fun getMaxLineWidthBible(): Int
+    fun setMaxLineWidthBible(width: Int)
+
+    fun getMaxLineWidthCreed(): Int
+    fun setMaxLineWidthCreed(width: Int)
 }

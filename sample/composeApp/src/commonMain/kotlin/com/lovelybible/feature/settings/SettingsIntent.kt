@@ -10,9 +10,14 @@ sealed class SettingsIntent {
     data class UpdateAutoPptOnSearch(val enabled: Boolean) : SettingsIntent()
     
     /**
-     * 최대 줄 너비 설정 변경 (0~1920)
+     * 일반 성경 최대 줄 너비 설정 변경 (0~1920)
      */
-    data class UpdateMaxLineWidth(val width: Int) : SettingsIntent()
+    data class UpdateMaxLineWidthBible(val width: Int) : SettingsIntent()
+    
+    /**
+     * 사도 신경 최대 줄 너비 설정 변경 (0~1920)
+     */
+    data class UpdateMaxLineWidthCreed(val width: Int) : SettingsIntent()
     
     /**
      * 설정 저장 (tempState → savedState)

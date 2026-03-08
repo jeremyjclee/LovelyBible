@@ -27,10 +27,12 @@ class SettingsViewModel(
         // 초기화: 저장소에서 설정 로드
         try {
             val isAutoPptOn = repository.isAutoPptOnSearch()
-            val maxLines = repository.getMaxLineWidth()
+            val maxLinesBible = repository.getMaxLineWidthBible()
+            val maxLinesCreed = repository.getMaxLineWidthCreed()
             val initialState = SettingsState(
                 autoPptOnSearch = isAutoPptOn,
-                maxLineWidth = maxLines
+                maxLineWidthBible = maxLinesBible,
+                maxLineWidthCreed = maxLinesCreed
             )
             state = initialState
             savedState = initialState.copy()
@@ -48,7 +50,8 @@ class SettingsViewModel(
     fun onIntent(intent: SettingsIntent) {
         when (intent) {
             is SettingsIntent.UpdateAutoPptOnSearch -> updateAutoPptOnSearch(intent.enabled)
-            is SettingsIntent.UpdateMaxLineWidth -> updateMaxLineWidth(intent.width)
+            is SettingsIntent.UpdateMaxLineWidthBible -> updateMaxLineWidthBible(intent.width)
+            is SettingsIntent.UpdateMaxLineWidthCreed -> updateMaxLineWidthCreed(intent.width)
             SettingsIntent.SaveSettings -> saveSettings()
             SettingsIntent.CancelSettings -> cancelSettings()
         }
@@ -62,12 +65,19 @@ class SettingsViewModel(
     }
 
     /**
-     * 최대 줄 너비 변경 (tempState만 수정)
+     * 일반 성경 최대 줄 너비 변경 (tempState만 수정)
      */
-    private fun updateMaxLineWidth(width: Int) {
-        // 유효성 검사 (0~1920)
+    private fun updateMaxLineWidthBible(width: Int) {
         val safeWidth = width.coerceIn(0, 1920)
-        state = state.copy(maxLineWidth = safeWidth)
+        state = state.copy(maxLineWidthBible = safeWidth)
+    }
+
+    /**
+     * 사도 신경 최대 줄 너비 변경 (tempState만 수정)
+     */
+    private fun updateMaxLineWidthCreed(width: Int) {
+        val safeWidth = width.coerceIn(0, 1920)
+        state = state.copy(maxLineWidthCreed = safeWidth)
     }
     
     /**
@@ -78,7 +88,8 @@ class SettingsViewModel(
         // Repository에 저장
         try {
             repository.setAutoPptOnSearch(state.autoPptOnSearch)
-            repository.setMaxLineWidth(state.maxLineWidth)
+            repository.setMaxLineWidthBible(state.maxLineWidthBible)
+            repository.setMaxLineWidthCreed(state.maxLineWidthCreed)
         } catch (e: Exception) {
             // 저장 실패 시 무시 (다음 실행 시 기본값 사용)
         }

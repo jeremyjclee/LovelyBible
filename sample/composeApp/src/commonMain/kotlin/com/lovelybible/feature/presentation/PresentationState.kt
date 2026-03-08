@@ -24,5 +24,6 @@ data class PresentationState(
     val currentTitle: String = "",
     val mode: PresentationMode = PresentationMode.NONE,
     val fontSizeLevel: Int = 2,  // 1~10단계, 기본값 2 (40.sp)
-    val maxLineWidth: Int = 1120
+    val maxLineWidthBible: Int = 900,
+    val maxLineWidthCreed: Int = 1120
 )

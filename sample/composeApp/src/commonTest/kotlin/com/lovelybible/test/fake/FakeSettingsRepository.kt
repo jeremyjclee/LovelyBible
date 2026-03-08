@@ -11,11 +11,18 @@ class FakeSettingsRepository : SettingsRepository {
         isAutoPptOn = enabled
     }
 
-    private var maxLineWidth = 1300 // default
+    private var maxLineWidthBible = 900 // default
+    private var maxLineWidthCreed = 1120 // default
 
-    override fun getMaxLineWidth(): Int = maxLineWidth
+    override fun getMaxLineWidthBible(): Int = maxLineWidthBible
 
-    override fun setMaxLineWidth(width: Int) {
-        maxLineWidth = width
+    override fun setMaxLineWidthBible(width: Int) {
+        maxLineWidthBible = width
+    }
+
+    override fun getMaxLineWidthCreed(): Int = maxLineWidthCreed
+
+    override fun setMaxLineWidthCreed(width: Int) {
+        maxLineWidthCreed = width
     }
 }

@@ -69,7 +69,8 @@ fun PresentationWindow(
                 verses = state.currentVerses,
                 title = state.currentTitle,
                 fontSizeLevel = state.fontSizeLevel,
-                maxLineWidth = state.maxLineWidth
+                maxLineWidthBible = state.maxLineWidthBible,
+                maxLineWidthCreed = state.maxLineWidthCreed
             )
         }
     }

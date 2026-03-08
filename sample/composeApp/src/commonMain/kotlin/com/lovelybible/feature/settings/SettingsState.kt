@@ -5,5 +5,6 @@ package com.lovelybible.feature.settings
  */
 data class SettingsState(
     val autoPptOnSearch: Boolean = false,
-    val maxLineWidth: Int = 1120 // 0~1920
+    val maxLineWidthBible: Int = 900, // 0~1920
+    val maxLineWidthCreed: Int = 1120 // 0~1920
 )

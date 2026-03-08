@@ -40,8 +40,9 @@ class PresentationViewModel(
         }
         
         // 설정 로드
-        val maxLines = settingsRepository.getMaxLineWidth()
-        state = state.copy(maxLineWidth = maxLines)
+        val maxLinesBible = settingsRepository.getMaxLineWidthBible()
+        val maxLinesCreed = settingsRepository.getMaxLineWidthCreed()
+        state = state.copy(maxLineWidthBible = maxLinesBible, maxLineWidthCreed = maxLinesCreed)
         
         // 모니터 정보 초기화
         refreshMonitors()
@@ -64,11 +65,12 @@ class PresentationViewModel(
         }
     }
 
-    /**
-     * 최대 줄 너비 업데이트
-     */
-    fun updateMaxLineWidth(width: Int) {
-        state = state.copy(maxLineWidth = width)
+    fun updateMaxLineWidthBible(width: Int) {
+        state = state.copy(maxLineWidthBible = width)
+    }
+
+    fun updateMaxLineWidthCreed(width: Int) {
+        state = state.copy(maxLineWidthCreed = width)
     }
     
     /**

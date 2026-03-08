@@ -29,20 +29,38 @@ class JvmSettingsRepository : SettingsRepository {
         }
     }
 
-    private val keyMaxLineWidth = "settings_max_line_width"
+    private val keyMaxLineWidthBible = "settings_max_line_width_bible"
+    private val keyMaxLineWidthCreed = "settings_max_line_width_creed"
 
-    override fun getMaxLineWidth(): Int {
-        // 기본값: 1120 (요청사항 4: 1120dp를 디폴트값으로 변경)
+    override fun getMaxLineWidthBible(): Int {
+        // 기본값: 900
         return try {
-            prefs?.getInt(keyMaxLineWidth, 1120) ?: 1120
+            prefs?.getInt(keyMaxLineWidthBible, 900) ?: 900
+        } catch (e: Exception) {
+            900
+        }
+    }
+
+    override fun setMaxLineWidthBible(width: Int) {
+        try {
+            prefs?.putInt(keyMaxLineWidthBible, width)
+        } catch (e: Exception) {
+            // 설정 저장 실패 시 무시
+        }
+    }
+
+    override fun getMaxLineWidthCreed(): Int {
+        // 기본값: 1120
+        return try {
+            prefs?.getInt(keyMaxLineWidthCreed, 1120) ?: 1120
         } catch (e: Exception) {
             1120
         }
     }
 
-    override fun setMaxLineWidth(width: Int) {
+    override fun setMaxLineWidthCreed(width: Int) {
         try {
-            prefs?.putInt(keyMaxLineWidth, width)
+            prefs?.putInt(keyMaxLineWidthCreed, width)
         } catch (e: Exception) {
             // 설정 저장 실패 시 무시
         }
