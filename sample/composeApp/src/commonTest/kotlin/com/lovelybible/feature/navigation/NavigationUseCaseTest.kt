@@ -330,13 +330,13 @@ class NavigationUseCaseTest {
     }
 
     /**
-     * 사도신경으로 이동 시 페이지 크기 5로 설정 테스트
+     * 사도신경으로 이동 시 페이지 크기 1로 설정 테스트
      */
     @Test
-    fun testNavigateToApostlesCreed_setsPageSizeTo5() = runTest {
+    fun testNavigateToApostlesCreed_setsPageSizeTo1() = runTest {
         val repository = FakeNavigationRepository()
         val viewModel = NavigationViewModel(repository)
-        advanceUntilIdle() // Init flushing. Should be at "사신", size 5.
+        advanceUntilIdle() // Init flushing. Should be at "사신", size 1.
         
         // 창세기(1절)에서 시작
         viewModel.onIntent(NavigationIntent.NavigateToPosition(BiblePosition("창", 1, 1)))
@@ -347,7 +347,7 @@ class NavigationUseCaseTest {
         viewModel.onIntent(NavigationIntent.NavigateToPosition(BiblePosition("사신", 1, 1)))
         advanceUntilIdle()
         
-        assertEquals(5, viewModel.state.pageSize, "Apostles' Creed should default to pageSize 5")
+        assertEquals(1, viewModel.state.pageSize, "Apostles' Creed should default to pageSize 1")
     }
 
     /**
@@ -357,12 +357,12 @@ class NavigationUseCaseTest {
     fun testNavigateToBibleBook_setsPageSizeTo1() = runTest {
         val repository = FakeNavigationRepository()
         val viewModel = NavigationViewModel(repository)
-        advanceUntilIdle() // Init flushing. At "사신", size 5.
+        advanceUntilIdle() // Init flushing. At "사신", size 1.
         
         // 사도신경으로 명시적 이동 (already there, but for safety)
         viewModel.onIntent(NavigationIntent.NavigateToPosition(BiblePosition("사신", 1, 1)))
         advanceUntilIdle()
-        assertEquals(5, viewModel.state.pageSize)
+        assertEquals(1, viewModel.state.pageSize)
         
         // 창세기로 이동
         viewModel.onIntent(NavigationIntent.NavigateToPosition(BiblePosition("창", 1, 1)))
